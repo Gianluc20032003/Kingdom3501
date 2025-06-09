@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fix para elementos que se ven feos */
+* {
+  box-sizing: border-box;
+}
+
+/* Evitar elementos flotantes raros */
+.min-h-screen {
+  min-height: 100vh;
+}
+
+/* Fix temporal para elementos mal posicionados */
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+.fixed {
+  position: fixed !important;
+}
+
+/* Ocultar elementos que se ven mal */
+[class*="123456"] {
+  display: none !important;
+}
