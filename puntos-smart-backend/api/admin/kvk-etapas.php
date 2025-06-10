@@ -182,14 +182,30 @@ try {
                 sendResponse(false, 'Ya existe una etapa con ese orden', null, 409);
             }
 
-            // Crear etapa
-            $stmt = $pdo->prepare("
-                INSERT INTO kvk_etapas (nombre_etapa, orden_etapa, activa)
-                VALUES (?, ?, 1)
-            ");
-            $stmt->execute([$nombreEtapa, $ordenEtapa]);
+            // USAR TRANSACCIÓN PARA GARANTIZAR CONSISTENCIA
+            $pdo->beginTransaction();
 
-            sendResponse(true, 'Etapa creada exitosamente');
+            try {
+                // PASO 1: Desactivar TODAS las etapas existentes
+                $stmt = $pdo->prepare("UPDATE kvk_etapas SET activa = 0");
+                $stmt->execute();
+
+                // PASO 2: Crear la nueva etapa como ACTIVA
+                $stmt = $pdo->prepare("
+                    INSERT INTO kvk_etapas (nombre_etapa, orden_etapa, activa)
+                    VALUES (?, ?, 1)
+                ");
+                $stmt->execute([$nombreEtapa, $ordenEtapa]);
+
+                // Confirmar transacción
+                $pdo->commit();
+
+                sendResponse(true, "Etapa '$nombreEtapa' creada exitosamente y activada. Las demás etapas fueron desactivadas.");
+            } catch (Exception $e) {
+                // Revertir cambios si hay error
+                $pdo->rollBack();
+                throw $e;
+            }
             break;
 
         case 'PUT':
@@ -214,9 +230,11 @@ try {
             }
 
             // Verificar que la etapa existe
-            $stmt = $pdo->prepare("SELECT id FROM kvk_etapas WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT id, nombre_etapa FROM kvk_etapas WHERE id = ?");
             $stmt->execute([$etapaId]);
-            if (!$stmt->fetch()) {
+            $etapa = $stmt->fetch();
+
+            if (!$etapa) {
                 sendResponse(false, 'La etapa no existe', null, 404);
             }
 
@@ -229,15 +247,37 @@ try {
                 sendResponse(false, 'Ya existe otra etapa con ese orden', null, 409);
             }
 
-            // Actualizar etapa
-            $stmt = $pdo->prepare("
-                UPDATE kvk_etapas 
-                SET nombre_etapa = ?, orden_etapa = ?, activa = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([$nombreEtapa, $ordenEtapa, $activa ? 1 : 0, $etapaId]);
+            // USAR TRANSACCIÓN PARA GARANTIZAR CONSISTENCIA
+            $pdo->beginTransaction();
 
-            sendResponse(true, 'Etapa actualizada exitosamente');
+            try {
+                if ($activa) {
+                    // PASO 1: Si la etapa se está activando, desactivar TODAS las otras
+                    $stmt = $pdo->prepare("UPDATE kvk_etapas SET activa = 0 WHERE id != ?");
+                    $stmt->execute([$etapaId]);
+
+                    $mensaje = "Etapa '{$etapa['nombre_etapa']}' actualizada y activada. Las demás etapas fueron desactivadas.";
+                } else {
+                    $mensaje = "Etapa '{$etapa['nombre_etapa']}' actualizada y desactivada.";
+                }
+
+                // PASO 2: Actualizar la etapa actual
+                $stmt = $pdo->prepare("
+                    UPDATE kvk_etapas 
+                    SET nombre_etapa = ?, orden_etapa = ?, activa = ?
+                    WHERE id = ?
+                ");
+                $stmt->execute([$nombreEtapa, $ordenEtapa, $activa ? 1 : 0, $etapaId]);
+
+                // Confirmar transacción
+                $pdo->commit();
+
+                sendResponse(true, $mensaje);
+            } catch (Exception $e) {
+                // Revertir cambios si hay error
+                $pdo->rollBack();
+                throw $e;
+            }
             break;
 
         case 'DELETE':
@@ -250,26 +290,44 @@ try {
             }
 
             // Verificar que la etapa existe
-            $stmt = $pdo->prepare("SELECT id FROM kvk_etapas WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT id, nombre_etapa FROM kvk_etapas WHERE id = ?");
             $stmt->execute([$etapaId]);
-            if (!$stmt->fetch()) {
+            $etapa = $stmt->fetch();
+
+            if (!$etapa) {
                 sendResponse(false, 'La etapa no existe', null, 404);
             }
 
-            // Verificar si hay batallas asociadas a esta etapa
-            $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM kvk_batallas WHERE etapa_id = ?");
-            $stmt->execute([$etapaId]);
-            $result = $stmt->fetch();
 
-            if ($result['total'] > 0) {
-                sendResponse(false, 'No se puede eliminar la etapa porque tiene batallas asociadas', null, 409);
+            try {
+                // Contar batallas antes de eliminar (solo para informar al usuario)
+                $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM kvk_batallas WHERE etapa_id = ?");
+                $stmt->execute([$etapaId]);
+                $result = $stmt->fetch();
+                $batallaCount = $result['total'];
+
+                // Eliminar etapa (DELETE CASCADE eliminará automáticamente las batallas)
+                $stmt = $pdo->prepare("DELETE FROM kvk_etapas WHERE id = ?");
+                $stmt->execute([$etapaId]);
+
+                // Mensaje informativo
+                if ($batallaCount > 0) {
+                    $mensaje = "Etapa '{$etapa['nombre_etapa']}' eliminada exitosamente junto con {$batallaCount} batalla(s) asociada(s)";
+                } else {
+                    $mensaje = "Etapa '{$etapa['nombre_etapa']}' eliminada exitosamente";
+                }
+
+                sendResponse(true, $mensaje);
+            } catch (PDOException $e) {
+                error_log('Error eliminando etapa: ' . $e->getMessage());
+
+                // Si el error es por FK constraint, significa que no se configuró CASCADE
+                if (strpos($e->getMessage(), 'foreign key constraint') !== false) {
+                    sendResponse(false, 'Error: La base de datos no está configurada correctamente. Contacte al administrador.', null, 500);
+                } else {
+                    sendResponse(false, 'Error interno del servidor', null, 500);
+                }
             }
-
-            // Eliminar etapa
-            $stmt = $pdo->prepare("DELETE FROM kvk_etapas WHERE id = ?");
-            $stmt->execute([$etapaId]);
-
-            sendResponse(true, 'Etapa eliminada exitosamente');
             break;
 
         default:
