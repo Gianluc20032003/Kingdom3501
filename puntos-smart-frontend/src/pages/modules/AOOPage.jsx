@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAlert } from "../../contexts/AlertContext";
+import { useTranslation } from "../../contexts/TranslationContext";
 import { aooAPI } from "../../services/api";
-import { formatDate, validateFile, createFormData } from "../../utils/helpers";
+import { validateFile, createFormData } from "../../utils/helpers";
 import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
 import { ButtonSpinner } from "../../components/ui/LoadingSpinner";
@@ -11,6 +12,7 @@ import ImageModal from "../../components/ui/ImageModal";
 const AOOPage = () => {
   const { user } = useAuth();
   const { showAlert } = useAlert();
+  const { t, formatNumber, formatDate } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState(null);
@@ -68,7 +70,7 @@ const AOOPage = () => {
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      showAlert("Error al cargar los datos: " + error.message, "error");
+      showAlert(t("errors.loadingData") + ": " + error.message, "error");
     } finally {
       setLoading(false);
     }
@@ -99,26 +101,23 @@ const AOOPage = () => {
     e.preventDefault();
 
     if (!config) {
-      showAlert("No hay configuración AOO activa", "error");
+      showAlert(t("aoo.noScheduledEvents"), "error");
       return;
     }
 
     if (!formData.cantidad_tropas || formData.cantidad_tropas < 0) {
-      showAlert("La cantidad de tropas debe ser un número válido", "error");
+      showAlert(t("aoo.validTroopsAmount"), "error");
       return;
     }
 
     if (!formData.comandantes_disponibles.trim()) {
-      showAlert("Debes especificar los comandantes disponibles", "error");
+      showAlert(t("aoo.commandersRequired"), "error");
       return;
     }
 
     const isNewRecord = !userData;
     if (isNewRecord && !formData.foto_comandantes) {
-      showAlert(
-        "La foto de comandantes es requerida para el registro inicial",
-        "error"
-      );
+      showAlert(t("aoo.commandersPhotoRequired"), "error");
       return;
     }
 
@@ -136,14 +135,14 @@ const AOOPage = () => {
       const response = await aooAPI.save(submitData);
 
       if (response.success) {
-        showAlert("Inscripción guardada exitosamente", "success");
+        showAlert(t("aoo.dataSaved"), "success");
         await loadModuleData();
       } else {
-        showAlert(response.message || "Error al guardar inscripción", "error");
+        showAlert(response.message || t("errors.savingData"), "error");
       }
     } catch (error) {
       console.error("Error saving data:", error);
-      showAlert("Error al guardar la inscripción: " + error.message, "error");
+      showAlert(t("errors.savingData") + ": " + error.message, "error");
     } finally {
       setSaving(false);
     }
@@ -183,16 +182,14 @@ const AOOPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                  👥 Inscripción AOO
+                  👥 {t("aoo.title")}
                 </h1>
-                <p className="text-gray-600">
-                  Regístrate para eventos Ark of Osiris (AOO)
-                </p>
+                <p className="text-gray-600">{t("aoo.subtitle")}</p>
               </div>
               {config && (
                 <div className="text-right">
                   <div className="text-sm text-gray-500">
-                    Horario del Evento
+                    {t("aoo.eventSchedule")}
                   </div>
                   <div className="text-2xl font-bold text-green-600">
                     {config.horario}
@@ -206,12 +203,11 @@ const AOOPage = () => {
           {!config ? (
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
               <div className="text-4xl mb-4">⏰</div>
-              <h3 class="text-lg font-semibold text-yellow-800 mb-2">
-                No hay eventos AOO programados
+              <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                {t("aoo.noScheduledEvents")}
               </h3>
-              <p class="text-yellow-700">
-                El administrador debe configurar un evento AOO para poder
-                inscribirse
+              <p className="text-yellow-700">
+                {t("aoo.noScheduledEventsDesc")}
               </p>
             </div>
           ) : (
@@ -219,14 +215,17 @@ const AOOPage = () => {
               {/* Formulario de inscripción */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                  ➕ {isUpdate ? "Actualizar" : "Registrar"} Inscripción AOO
+                  ➕{" "}
+                  {isUpdate
+                    ? t("aoo.updateInscription")
+                    : t("aoo.registerInscription")}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Cantidad de Tropas
+                        {t("aoo.troopsAmount")}
                       </label>
                       <input
                         type="number"
@@ -234,18 +233,18 @@ const AOOPage = () => {
                         value={formData.cantidad_tropas}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Ej: 500000"
+                        placeholder={t("aoo.troopsAmountPlaceholder")}
                         min="0"
                         required
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        Número total de tropas disponibles
+                        {t("aoo.troopsAmountDesc")}
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Foto de Comandantes
+                        {t("aoo.commandersPhoto")}
                       </label>
                       <input
                         type="file"
@@ -256,33 +255,50 @@ const AOOPage = () => {
                         required={!isUpdate}
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        Captura de pantalla de tus comandantes
+                        {t("aoo.commandersPhotoDesc")}
                       </p>
-
-                      {/* Preview de imagen actual */}
-                      {userData?.foto_comandantes_url && (
-                        <div className="mt-3">
+                      <div className="mt-3 flex items-start space-x-6">
+                        <div>
                           <p className="text-sm text-gray-600 mb-2">
-                            Imagen actual:
+                            {t("common.example")}:
                           </p>
                           <img
-                            src={`http://localhost:8000/uploads/${userData.foto_comandantes_url}`}
-                            alt="Foto actual"
+                            src="https://servicios.puntossmart.com/img/cmr.jpg"
+                            alt={t("kvk.ownDeathsPhoto")}
                             className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
-                                `http://localhost:8000/uploads/${userData.foto_comandantes_url}`
+                                "https://servicios.puntossmart.com/img/cmr.jpg"
                               )
                             }
                           />
                         </div>
-                      )}
+
+                        {/* Preview de imagen actual */}
+                        {userData?.foto_comandantes_url && (
+                          <div className="mt-3">
+                            <p className="text-sm text-gray-600 mb-2">
+                              {t("common.currentImage")}:
+                            </p>
+                            <img
+                              src={`http://localhost:8000/uploads/${userData.foto_comandantes_url}`}
+                              alt="Foto actual"
+                              className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() =>
+                                openImageModal(
+                                  `http://localhost:8000/uploads/${userData.foto_comandantes_url}`
+                                )
+                              }
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-gray-700 text-sm font-bold mb-2">
-                      Comandantes Disponibles
+                      {t("aoo.availableCommanders")}
                     </label>
                     <textarea
                       name="comandantes_disponibles"
@@ -290,18 +306,18 @@ const AOOPage = () => {
                       onChange={handleInputChange}
                       rows="4"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Ej: Richard I, Edward, Constantine..."
+                      placeholder={t("aoo.availableCommandersPlaceholder")}
                       required
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Lista los comandantes que tienes disponibles para AOO
+                      {t("aoo.availableCommandersDesc")}
                     </p>
                   </div>
 
                   {/* Capacidades de liderazgo */}
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-gray-800">
-                      Capacidades de Liderazgo
+                      {t("aoo.leadershipCapabilities")}
                     </h3>
 
                     <div className="flex items-center">
@@ -317,7 +333,7 @@ const AOOPage = () => {
                         htmlFor="puede_liderar_rally"
                         className="ml-2 text-sm text-gray-700"
                       >
-                        Puedo liderar Rally
+                        {t("aoo.canLeadRally")}
                       </label>
                     </div>
 
@@ -334,7 +350,7 @@ const AOOPage = () => {
                         htmlFor="puede_liderar_guarnicion"
                         className="ml-2 text-sm text-gray-700"
                       >
-                        Puedo liderar Guarnición
+                        {t("aoo.canLeadGarrison")}
                       </label>
                     </div>
                   </div>
@@ -345,7 +361,7 @@ const AOOPage = () => {
                       onClick={loadModuleData}
                       className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      Cancelar
+                      {t("common.cancel")}
                     </button>
                     <button
                       type="submit"
@@ -354,123 +370,12 @@ const AOOPage = () => {
                     >
                       {saving && <ButtonSpinner />}
                       <span>
-                        {isUpdate ? "Actualizar" : "Registrar"} Inscripción
+                        {isUpdate ? t("common.update") : t("common.register")}{" "}
+                        {t("aoo.title")}
                       </span>
                     </button>
                   </div>
                 </form>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                  📋 Lista de Inscritos ({inscripciones.length})
-                </h2>
-
-                {inscripciones.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                            Usuario
-                          </th>
-                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                            Tropas
-                          </th>
-                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                            Rally
-                          </th>
-                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                            Guarnición
-                          </th>
-                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                            Comandantes
-                          </th>
-                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                            Foto
-                          </th>
-                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                            Fecha
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {inscripciones.map((inscripcion, index) => (
-                          <tr
-                            key={index}
-                            className="border-t hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="px-4 py-4">
-                              <div className="font-semibold text-gray-800">
-                                {inscripcion.nombre_usuario}
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-center">
-                              <span className="font-medium">
-                                {new Intl.NumberFormat("es-ES").format(
-                                  inscripcion.cantidad_tropas
-                                )}
-                              </span>
-                            </td>
-                            <td className="px-4 py-4 text-center">
-                              {inscripcion.puede_liderar_rally ? (
-                                <span className="text-green-600">✅</span>
-                              ) : (
-                                <span className="text-gray-400">❌</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-4 text-center">
-                              {inscripcion.puede_liderar_guarnicion ? (
-                                <span className="text-green-600">✅</span>
-                              ) : (
-                                <span className="text-gray-400">❌</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="max-w-xs truncate text-sm">
-                                {inscripcion.comandantes_disponibles}
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-center">
-                              {inscripcion.foto_comandantes_url ? (
-                                <img
-                                  src={`http://localhost:8000/uploads/${inscripcion.foto_comandantes_url}`}
-                                  alt="Comandantes"
-                                  className="w-12 h-12 object-cover rounded mx-auto cursor-pointer hover:opacity-80 transition-opacity"
-                                  onClick={() =>
-                                    openImageModal(
-                                      `http://localhost:8000/uploads/${inscripcion.foto_comandantes_url}`
-                                    )
-                                  }
-                                />
-                              ) : (
-                                <span className="text-gray-400 text-sm">
-                                  Sin foto
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-4 py-4 text-center">
-                              <span className="text-sm text-gray-600">
-                                {formatDate(inscripcion.fecha_inscripcion)}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-4">📝</div>
-                    <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                      No hay inscripciones todavía
-                    </h3>
-                    <p className="text-gray-500">
-                      Los usuarios podrán inscribirse cuando haya un evento AOO
-                      configurado
-                    </p>
-                  </div>
-                )}
               </div>
             </>
           )}

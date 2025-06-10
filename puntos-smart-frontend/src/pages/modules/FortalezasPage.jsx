@@ -1,7 +1,9 @@
+// pages/modules/FortalezasPage.jsx - Ejemplo con traducciones
 import React, { useState, useEffect } from 'react';
 import { useAlert } from '../../contexts/AlertContext';
+import { useTranslation } from '../../contexts/TranslationContext';
 import { fortalezasAPI } from '../../services/api';
-import { formatNumber, formatDate, getCurrentWeekNumber, validateFile, createFormData } from '../../utils/helpers';
+import { validateFile, createFormData, getCurrentWeekNumber } from '../../utils/helpers';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import { ButtonSpinner } from '../../components/ui/LoadingSpinner';
@@ -9,6 +11,7 @@ import ImageModal from '../../components/ui/ImageModal';
 
 const FortalezasPage = () => {
   const { showAlert } = useAlert();
+  const { t, formatNumber, formatDate } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -44,7 +47,7 @@ const FortalezasPage = () => {
       }
     } catch (error) {
       console.error('Error loading data:', error);
-      showAlert('Error al cargar los datos: ' + error.message, 'error');
+      showAlert(t('errors.loadingData') + ': ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -73,13 +76,13 @@ const FortalezasPage = () => {
     e.preventDefault();
     
     if (!formData.cantidad_cofres || formData.cantidad_cofres < 0) {
-      showAlert('La cantidad de cofres debe ser un número válido', 'error');
+      showAlert(t('fortresses.validChestAmount'), 'error');
       return;
     }
 
     const isNewRecord = !userData?.current_week;
     if (isNewRecord && !formData.foto_cofres) {
-      showAlert('La foto es requerida para el registro inicial', 'error');
+      showAlert(t('fortresses.photoRequired'), 'error');
       return;
     }
 
@@ -94,14 +97,14 @@ const FortalezasPage = () => {
       const response = await fortalezasAPI.save(submitData);
       
       if (response.success) {
-        showAlert('Datos guardados exitosamente', 'success');
+        showAlert(t('fortresses.dataSaved'), 'success');
         await loadModuleData(); // Recargar datos
       } else {
-        showAlert(response.message || 'Error al guardar datos', 'error');
+        showAlert(response.message || t('fortresses.saveError'), 'error');
       }
     } catch (error) {
       console.error('Error saving data:', error);
-      showAlert('Error al guardar los datos: ' + error.message, 'error');
+      showAlert(t('errors.savingData') + ': ' + error.message, 'error');
     } finally {
       setSaving(false);
     }
@@ -154,14 +157,14 @@ const FortalezasPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                  🏰 Ranking Fortalezas Bárbaras
+                  🏰 {t('fortresses.title')}
                 </h1>
                 <p className="text-gray-600">
-                  Registra tus cofres semanales y compite con otros jugadores
+                  {t('fortresses.subtitle')}
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-500">Semana Actual</div>
+                <div className="text-sm text-gray-500">{t('fortresses.currentWeek')}</div>
                 <div className="text-2xl font-bold text-purple-600">
                   {getCurrentWeekNumber()}
                 </div>
@@ -172,14 +175,14 @@ const FortalezasPage = () => {
           {/* Formulario */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              ➕ {isUpdate ? 'Actualizar' : 'Registrar'} Cofres de la Semana
+              ➕ {isUpdate ? t('fortresses.updateChests') : t('fortresses.registerChests')}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Cantidad de Cofres
+                    {t('fortresses.chestAmount')}
                   </label>
                   <input
                     type="number"
@@ -187,18 +190,18 @@ const FortalezasPage = () => {
                     value={formData.cantidad_cofres}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Ej: 15000"
+                    placeholder={t('fortresses.chestAmountPlaceholder')}
                     min="0"
                     required
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Ingresa la cantidad total de cofres obtenidos
+                    {t('fortresses.chestAmountDesc')}
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Foto de Cofres
+                    {t('fortresses.chestPhoto')}
                   </label>
                   <input
                     type="file"
@@ -209,13 +212,13 @@ const FortalezasPage = () => {
                     required={!isUpdate}
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Sube una captura de pantalla como evidencia
+                    {t('fortresses.chestPhotoDesc')}
                   </p>
 
                   {/* Preview de imagen actual */}
                   {userData?.current_week?.foto_url && (
                     <div className="mt-3">
-                      <p className="text-sm text-gray-600 mb-2">Imagen actual:</p>
+                      <p className="text-sm text-gray-600 mb-2">{t('common.currentImage')}:</p>
                       <img
                         src={`/uploads/${userData.current_week.foto_url}`}
                         alt="Foto actual"
@@ -233,7 +236,7 @@ const FortalezasPage = () => {
                   onClick={loadModuleData}
                   className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -241,7 +244,7 @@ const FortalezasPage = () => {
                   className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
                 >
                   {saving && <ButtonSpinner />}
-                  <span>{isUpdate ? 'Actualizar' : 'Registrar'} Cofres</span>
+                  <span>{isUpdate ? t('common.update') : t('common.register')} {t('common.amount')}</span>
                 </button>
               </div>
             </form>
@@ -250,7 +253,7 @@ const FortalezasPage = () => {
           {/* Ranking */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              🏆 Ranking de Fortalezas
+              🏆 {t('fortresses.ranking')}
             </h2>
 
             {rankingData.length > 0 ? (
@@ -258,13 +261,13 @@ const FortalezasPage = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Posición</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Usuario</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Sem. Pasada</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Foto Anterior</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Sem. Actual</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Foto Actual</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Diferencia</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('common.position')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('common.user')}</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('fortresses.lastWeek')}</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('fortresses.lastPhoto')}</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('fortresses.currentWeekShort')}</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('fortresses.currentPhoto')}</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('fortresses.difference')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -287,7 +290,7 @@ const FortalezasPage = () => {
                             {player.nombre_usuario}
                             {player.es_usuario_actual && (
                               <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                                Tú
+                                {t('fortresses.you')}
                               </span>
                             )}
                           </div>
@@ -306,7 +309,7 @@ const FortalezasPage = () => {
                               onClick={() => openImageModal(`/uploads/${player.foto_semana_pasada}`)}
                             />
                           ) : (
-                            <span className="text-gray-400 text-sm">Sin foto</span>
+                            <span className="text-gray-400 text-sm">{t('fortresses.noPhoto')}</span>
                           )}
                         </td>
                         <td className="px-4 py-4 text-center">
@@ -323,7 +326,7 @@ const FortalezasPage = () => {
                               onClick={() => openImageModal(`/uploads/${player.foto_semana_actual}`)}
                             />
                           ) : (
-                            <span className="text-gray-400 text-sm">Sin foto</span>
+                            <span className="text-gray-400 text-sm">{t('fortresses.noPhoto')}</span>
                           )}
                         </td>
                         <td className="px-4 py-4 text-center">
@@ -340,10 +343,10 @@ const FortalezasPage = () => {
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">📊</div>
                 <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  No hay datos de ranking
+                  {t('fortresses.noRankingData')}
                 </h3>
                 <p className="text-gray-500">
-                  Sé el primero en registrar tus cofres de fortaleza
+                  {t('fortresses.noRankingDesc')}
                 </p>
               </div>
             )}

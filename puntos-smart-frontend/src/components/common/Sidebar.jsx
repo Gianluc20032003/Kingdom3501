@@ -1,6 +1,8 @@
+// components/common/Sidebar.jsx - Versión actualizada con traductor
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "../../contexts/TranslationContext";
 import { modulesAPI } from "../../services/api";
 import {
   HomeIcon,
@@ -16,6 +18,7 @@ import {
 
 const Sidebar = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const location = useLocation();
   const [moduleConfigs, setModuleConfigs] = useState({});
   const [collapsed, setCollapsed] = useState(false);
@@ -37,41 +40,41 @@ const Sidebar = () => {
 
   const menuItems = [
     {
-      name: "Inicio",
+      name: t("nav.home"),
       path: "/dashboard",
       icon: HomeIcon,
       enabled: true,
     },
     {
-      name: "Fortalezas Bárbaras",
+      name: t("nav.fortresses"),
       path: "/fortalezas",
       icon: BuildingStorefrontIcon,
       enabled: moduleConfigs.fortalezas_barbaras?.habilitado !== false,
       key: "fortalezas_barbaras",
     },
     {
-      name: "Movilización",
+      name: t("nav.mobilization"),
       path: "/movilizacion",
       icon: ShoppingCartIcon,
       enabled: moduleConfigs.movilizacion?.habilitado !== false,
       key: "movilizacion",
     },
     {
-      name: "KvK",
+      name: t("nav.kvk"),
       path: "/kvk",
       icon: FireIcon,
       enabled: moduleConfigs.kvk?.habilitado !== false,
       key: "kvk",
     },
     {
-      name: "MGE",
+      name: t("nav.mge"),
       path: "/mge",
       icon: TrophyIcon,
       enabled: moduleConfigs.mge?.habilitado !== false,
       key: "mge",
     },
     {
-      name: "AOO",
+      name: t("nav.aoo"),
       path: "/aoo",
       icon: UsersIcon,
       enabled: moduleConfigs.aoo?.habilitado !== false,
@@ -81,25 +84,25 @@ const Sidebar = () => {
 
   const adminItems = [
     {
-      name: "Administración",
+      name: t("nav.admin"),
       path: "/admin",
       icon: CogIcon,
       enabled: user?.es_admin,
     },
     {
-      name: "Gestión AOO",
+      name: t("nav.adminAoo"),
       path: "/admin-aoo",
       icon: CogIcon,
       enabled: user?.es_admin,
     },
     {
-      name: "Gestión MGE",
+      name: t("nav.adminMge"),
       path: "/admin-mge",
       icon: CogIcon,
       enabled: user?.es_admin,
     },
     {
-      name: "Gestión KvK",
+      name: t("nav.adminKvk"),
       path: "/admin-kvk",
       icon: CogIcon,
       enabled: user?.es_admin,
@@ -174,7 +177,7 @@ const Sidebar = () => {
           <nav className="p-4 space-y-1">
             {!collapsed && (
               <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                Administración
+                {t("nav.admin")}
               </div>
             )}
             {adminItems.map((item) => (
@@ -203,7 +206,9 @@ const Sidebar = () => {
                 {user?.nombre_usuario}
               </p>
               <p className="text-xs text-gray-400">
-                {user?.es_admin ? "Administrador" : "Usuario"}
+                {user?.es_admin
+                  ? t("dashboard.administrator")
+                  : t("common.user")}
               </p>
             </div>
           )}

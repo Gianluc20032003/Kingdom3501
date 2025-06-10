@@ -1,6 +1,6 @@
 <?php
-// admin/kvk-etapas.php
-// Gestión de etapas de KvK y datos de usuarios (solo admin)
+// admin/kvk-etapas.php - ACTUALIZADO CON PUNTUACIÓN
+// Gestión de etapas de KvK y datos de usuarios con sistema de puntuación
 
 require_once '../config/config.php';
 
@@ -13,37 +13,55 @@ try {
     $pdo = getDBConnection();
 
     if ($method === 'GET' && $type === 'user_data') {
-        // Obtener datos de usuarios para todas las etapas
-        // Fetch all users
+        // Obtener datos completos de usuarios con puntuación
         $stmt = $pdo->query("
-            SELECT id, nombre_usuario
-            FROM usuarios
-            WHERE es_admin = 0
-            ORDER BY nombre_usuario ASC
+            SELECT 
+                u.id,
+                u.nombre_usuario,
+                
+                -- Datos iniciales
+                kd.kill_t4_iniciales,
+                kd.kill_t5_iniciales,
+                kd.muertes_propias_iniciales,
+                kd.foto_inicial_url,
+                kd.foto_muertes_iniciales_url,
+                kd.fecha_registro as fecha_inicial,
+                
+                -- Honor
+                kh.honor_cantidad,
+                kh.foto_honor_url,
+                kh.fecha_registro as fecha_honor,
+                
+                -- Puntuación desde la vista
+                vp.total_kill_t4_batallas,
+                vp.total_kill_t5_batallas,
+                vp.total_muertes_t4_batallas,
+                vp.total_muertes_t5_batallas,
+                vp.puntos_honor,
+                vp.puntos_kill_t4,
+                vp.puntos_kill_t5,
+                vp.puntos_muertes_t4,
+                vp.puntos_muertes_t5,
+                vp.puntuacion_total
+                
+            FROM usuarios u
+            LEFT JOIN kvk_datos kd ON u.id = kd.usuario_id
+            LEFT JOIN kvk_honor kh ON u.id = kh.usuario_id
+            LEFT JOIN vw_puntuacion_usuarios vp ON u.id = vp.usuario_id
+            WHERE u.es_admin = 0
+            ORDER BY vp.puntuacion_total DESC NULLS LAST, u.nombre_usuario ASC
         ");
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $userData = [];
         foreach ($users as $u) {
-            // Fetch initial data
-            $stmt = $pdo->prepare("
-                SELECT kill_points_iniciales, muertes_propias_iniciales, 
-                       foto_inicial_url, foto_muertes_iniciales_url, fecha_registro
-                FROM kvk_datos
-                WHERE usuario_id = ?
-                ORDER BY fecha_registro DESC
-                LIMIT 1
-            ");
-            $stmt->execute([$u['id']]);
-            $initial = $stmt->fetch(PDO::FETCH_ASSOC);
-
             // Fetch battle data
             $stmt = $pdo->prepare("
                 SELECT 
                     kb.etapa_id, kb.kill_points, kb.kill_t4, kb.kill_t5,
                     kb.muertes_propias_t4, kb.muertes_propias_t5,
                     kb.foto_batalla_url, kb.foto_muertes_url, kb.fecha_registro,
-                    ke.nombre_etapa
+                    ke.nombre_etapa, ke.orden_etapa
                 FROM kvk_batallas kb
                 INNER JOIN kvk_etapas ke ON kb.etapa_id = ke.id
                 WHERE kb.usuario_id = ?
@@ -55,7 +73,32 @@ try {
             $userData[] = [
                 'id' => $u['id'],
                 'nombre_usuario' => $u['nombre_usuario'],
-                'initial' => $initial ?: null,
+                'initial' => [
+                    'kill_t4_iniciales' => $u['kill_t4_iniciales'],
+                    'kill_t5_iniciales' => $u['kill_t5_iniciales'],
+                    'muertes_propias_iniciales' => $u['muertes_propias_iniciales'],
+                    'foto_inicial_url' => $u['foto_inicial_url'],
+                    'foto_muertes_iniciales_url' => $u['foto_muertes_iniciales_url'],
+                    'fecha_registro' => $u['fecha_inicial']
+                ],
+                'honor' => [
+                    'honor_cantidad' => $u['honor_cantidad'],
+                    'foto_honor_url' => $u['foto_honor_url'],
+                    'fecha_registro' => $u['fecha_honor']
+                ],
+                'puntuacion' => [
+                    'honor_cantidad' => $u['honor_cantidad'] ?? 0,
+                    'total_kill_t4_batallas' => $u['total_kill_t4_batallas'] ?? 0,
+                    'total_kill_t5_batallas' => $u['total_kill_t5_batallas'] ?? 0,
+                    'total_muertes_t4_batallas' => $u['total_muertes_t4_batallas'] ?? 0,
+                    'total_muertes_t5_batallas' => $u['total_muertes_t5_batallas'] ?? 0,
+                    'puntos_honor' => $u['puntos_honor'] ?? 0,
+                    'puntos_kill_t4' => $u['puntos_kill_t4'] ?? 0,
+                    'puntos_kill_t5' => $u['puntos_kill_t5'] ?? 0,
+                    'puntos_muertes_t4' => $u['puntos_muertes_t4'] ?? 0,
+                    'puntos_muertes_t5' => $u['puntos_muertes_t5'] ?? 0,
+                    'puntuacion_total' => $u['puntuacion_total'] ?? 0
+                ],
                 'batallas' => $batallas
             ];
         }
@@ -64,6 +107,33 @@ try {
         exit;
     }
 
+    if ($method === 'GET' && $type === 'ranking') {
+        // Obtener ranking simplificado para tabla principal
+        $stmt = $pdo->query("
+            SELECT 
+                usuario_id,
+                nombre_usuario,
+                honor_cantidad,
+                total_kill_t4_batallas,
+                total_kill_t5_batallas,
+                total_muertes_t4_batallas,
+                total_muertes_t5_batallas,
+                puntos_honor,
+                puntos_kill_t4,
+                puntos_kill_t5,
+                puntos_muertes_t4,
+                puntos_muertes_t5,
+                puntuacion_total
+            FROM vw_puntuacion_usuarios
+            ORDER BY puntuacion_total DESC
+        ");
+        $ranking = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        sendResponse(true, 'Ranking obtenido exitosamente', ['ranking' => $ranking]);
+        exit;
+    }
+
+    // El resto del código para gestión de etapas permanece igual...
     switch ($method) {
         case 'GET':
             // Obtener todas las etapas
@@ -129,7 +199,7 @@ try {
             }
 
             if ($ordenEtapa <= 0) {
-                sendResponse(false, 'El orden de la etapa debe be mayor a 0', null, 400);
+                sendResponse(false, 'El orden de la etapa debe ser mayor a 0', null, 400);
             }
 
             // Verificar que la etapa existe
@@ -201,3 +271,4 @@ try {
     error_log('Error en gestión de etapas KvK: ' . $e->getMessage());
     sendResponse(false, 'Error interno del servidor', null, 500);
 }
+?>

@@ -12,7 +12,6 @@ $user = getAuthenticatedUser();
 
 // Validar entrada
 $etapaId = $_POST['etapa_id'] ?? null;
-$killPoints = $_POST['kill_points'] ?? null;
 $killT4 = $_POST['kill_t4'] ?? 0;
 $killT5 = $_POST['kill_t5'] ?? 0;
 $muertesPropiasT4 = $_POST['muertes_propias_t4'] ?? 0;
@@ -23,10 +22,6 @@ if (empty($etapaId) || !is_numeric($etapaId)) {
     sendResponse(false, 'Debe seleccionar una etapa válida', null, 400);
 }
 
-if (empty($killPoints) || !is_numeric($killPoints) || $killPoints < 0) {
-    sendResponse(false, 'Los Kill Points deben ser un número válido mayor o igual a 0', null, 400);
-}
-
 if (!is_numeric($muertesPropiasT4) || $muertesPropiasT4 < 0) {
     sendResponse(false, 'Las muertes propias T4 deben ser un número válido mayor o igual a 0', null, 400);
 }
@@ -34,7 +29,6 @@ if (!is_numeric($muertesPropiasT5) || $muertesPropiasT5 < 0) {
     sendResponse(false, 'Las muertes propias T5 deben ser un número válido mayor o igual a 0', null, 400);
 }
 
-$killPoints = (int) $killPoints;
 $killT4 = (int) $killT4;
 $killT5 = (int) $killT5;
 $muertesPropiasT4 = (int) $muertesPropiasT4;
@@ -114,20 +108,19 @@ try {
         // Actualizar registro existente
         $stmt = $pdo->prepare("
             UPDATE kvk_batallas 
-            SET kill_points = ?, kill_t4 = ?, kill_t5 = ?, 
+            SET kill_t4 = ?, kill_t5 = ?, 
                 muertes_propias_t4 = ?, muertes_propias_t5 = ?, 
                 foto_batalla_url = ?, foto_muertes_url = ?
             WHERE id = ?
         ");
         $stmt->execute([
-            $killPoints,
             $killT4,
             $killT5,
             $muertesPropiasT4,
-            $muertesPropias_t5,
+            $muertesPropiasT5,
             $fotoBatallaUrl,
             $fotoMuertesUrl,
-            $existingRecord->id
+            $existingRecord['id']
         ]);
 
         sendResponse(true, 'Datos de batalla actualizados exitosamente');
@@ -135,17 +128,15 @@ try {
         // Crear nuevo registro
         $stmt = $pdo->prepare("
             INSERT INTO kvk_batallas (
-                usuario_id, etapa_id, kill_points, kill_t4, kill_t5, 
-                muertes_propias_t4,
-                muertes_propias_t5,
+                usuario_id, etapa_id, kill_t4, kill_t5, 
+                muertes_propias_t4, muertes_propias_t5, 
                 foto_batalla_url, foto_muertes_url
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $user->user_id,
             $etapaId,
-            $killPoints,
             $killT4,
             $killT5,
             $muertesPropiasT4,
@@ -160,7 +151,6 @@ try {
     error_log('Error guardando datos de batalla: ' . $e->getMessage());
     sendResponse(false, 'Error interno del servidor', null, 500);
 } catch (Exception $e) {
-
     error_log('Error guardando datos de batalla: ' . $e->getMessage());
     sendResponse(false, 'Error interno del servidor', null, 500);
 }

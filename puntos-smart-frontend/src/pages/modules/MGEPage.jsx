@@ -1,27 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { useAlert } from '../../contexts/AlertContext';
-import { mgeAPI } from '../../services/api';
-import { validateFile, createFormData } from '../../utils/helpers';
-import Header from '../../components/common/Header';
-import Sidebar from '../../components/common/Sidebar';
-import { ButtonSpinner } from '../../components/ui/LoadingSpinner';
-import ImageModal from '../../components/ui/ImageModal';
+import React, { useState, useEffect } from "react";
+import { useAlert } from "../../contexts/AlertContext";
+import { useTranslation } from "../../contexts/TranslationContext";
+import { mgeAPI } from "../../services/api";
+import { validateFile, createFormData } from "../../utils/helpers";
+import Header from "../../components/common/Header";
+import Sidebar from "../../components/common/Sidebar";
+import { ButtonSpinner } from "../../components/ui/LoadingSpinner";
+import ImageModal from "../../components/ui/ImageModal";
 
 const MGEPage = () => {
   const { showAlert } = useAlert();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState(null);
   const [userData, setUserData] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalImage, setModalImage] = useState('');
+  const [modalImage, setModalImage] = useState("");
   const [formData, setFormData] = useState({
-    comandante_principal: '',
-    comandante_pareja: '',
+    comandante_principal: "",
+    comandante_pareja: "",
     foto_equipamiento: null,
     foto_inscripciones: null,
     foto_comandantes: null,
-    foto_cabezas: null
+    foto_cabezas: null,
   });
 
   useEffect(() => {
@@ -31,31 +33,28 @@ const MGEPage = () => {
   const loadModuleData = async () => {
     try {
       setLoading(true);
-      
-      // Cargar configuración y datos del usuario
+
       const [configResponse, userResponse] = await Promise.all([
         mgeAPI.getConfig(),
-        mgeAPI.getUserData()
+        mgeAPI.getUserData(),
       ]);
 
       setConfig(configResponse.data);
       setUserData(userResponse.data);
 
-      // Llenar formulario si hay datos existentes
       if (userResponse.data) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          comandante_principal: userResponse.data.comandante_principal || '',
-          comandante_pareja: userResponse.data.comandante_pareja || ''
+          comandante_principal: userResponse.data.comandante_principal || "",
+          comandante_pareja: userResponse.data.comandante_pareja || "",
         }));
       }
-      
     } catch (error) {
-      console.error('Error loading MGE data:', error);
-      if (error.message.includes('No hay eventos MGE activos')) {
-        showAlert('No hay eventos MGE activos en este momento', 'info');
+      console.error("Error loading MGE data:", error);
+      if (error.message.includes("No hay eventos MGE activos")) {
+        showAlert(t("mge.noActiveEvents"), "info");
       } else {
-        showAlert('Error al cargar los datos: ' + error.message, 'error');
+        showAlert(t("errors.loadingData") + ": " + error.message, "error");
       }
     } finally {
       setLoading(false);
@@ -64,39 +63,46 @@ const MGEPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    
+
     if (files && files[0]) {
       const file = files[0];
       const errors = validateFile(file);
-      
+
       if (errors.length > 0) {
-        showAlert(errors.join(', '), 'error');
-        e.target.value = '';
+        showAlert(errors.join(", "), "error");
+        e.target.value = "";
         return;
       }
-      
-      setFormData(prev => ({ ...prev, [name]: file }));
+
+      setFormData((prev) => ({ ...prev, [name]: file }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.comandante_principal.trim()) {
-      showAlert('El comandante principal es requerido', 'error');
+      showAlert(t("mge.mainCommanderRequired"), "error");
       return;
     }
 
-    // Validar que se suban todas las fotos si es nuevo registro
     const isNewRecord = !userData;
-    const fotoFields = ['foto_equipamiento', 'foto_inscripciones', 'foto_comandantes', 'foto_cabezas'];
-    
+    const fotoFields = {
+      foto_equipamiento: t("mge.equipmentPhoto"),
+      foto_inscripciones: t("mge.inscriptionsPhoto"),
+      foto_comandantes: t("mge.commandersPhoto"),
+      foto_cabezas: t("mge.legendaryHeadsPhoto"),
+    };
+
     if (isNewRecord) {
-      for (const field of fotoFields) {
+      for (const [field, fieldName] of Object.entries(fotoFields)) {
         if (!formData[field]) {
-          showAlert(`La ${field.replace('foto_', 'foto de ')} es requerida`, 'error');
+          showAlert(
+            t("mge.photoRequired", { photo: fieldName.toLowerCase() }),
+            "error"
+          );
           return;
         }
       }
@@ -104,27 +110,35 @@ const MGEPage = () => {
 
     try {
       setSaving(true);
-      
-      const submitData = createFormData({
-        comandante_principal: formData.comandante_principal,
-        comandante_pareja: formData.comandante_pareja,
-        foto_equipamiento: formData.foto_equipamiento,
-        foto_inscripciones: formData.foto_inscripciones,
-        foto_comandantes: formData.foto_comandantes,
-        foto_cabezas: formData.foto_cabezas
-      }, ['foto_equipamiento', 'foto_inscripciones', 'foto_comandantes', 'foto_cabezas']);
+
+      const submitData = createFormData(
+        {
+          comandante_principal: formData.comandante_principal,
+          comandante_pareja: formData.comandante_pareja,
+          foto_equipamiento: formData.foto_equipamiento,
+          foto_inscripciones: formData.foto_inscripciones,
+          foto_comandantes: formData.foto_comandantes,
+          foto_cabezas: formData.foto_cabezas,
+        },
+        [
+          "foto_equipamiento",
+          "foto_inscripciones",
+          "foto_comandantes",
+          "foto_cabezas",
+        ]
+      );
 
       const response = await mgeAPI.save(submitData);
-      
+
       if (response.success) {
-        showAlert('Postulación guardada exitosamente', 'success');
-        await loadModuleData(); // Recargar datos
+        showAlert(t("mge.dataSaved"), "success");
+        await loadModuleData();
       } else {
-        showAlert(response.message || 'Error al guardar postulación', 'error');
+        showAlert(response.message || t("errors.savingData"), "error");
       }
     } catch (error) {
-      console.error('Error saving MGE data:', error);
-      showAlert('Error al guardar la postulación: ' + error.message, 'error');
+      console.error("Error saving MGE data:", error);
+      showAlert(t("errors.savingData") + ": " + error.message, "error");
     } finally {
       setSaving(false);
     }
@@ -137,24 +151,24 @@ const MGEPage = () => {
 
   const getTipoTropaIcon = (tipo) => {
     const iconos = {
-      'arqueria': '🏹',
-      'infanteria': '🛡️',
-      'caballeria': '🐎',
-      'liderazgo': '👑',
-      'ingenieros': '🔧'
+      arqueria: "🏹",
+      infanteria: "🛡️",
+      caballeria: "🐎",
+      liderazgo: "👑",
+      ingenieros: "🔧",
     };
-    return iconos[tipo] || '⚔️';
+    return iconos[tipo] || "⚔️";
   };
 
   const getTipoTropaColor = (tipo) => {
     const colores = {
-      'arqueria': 'text-green-600 bg-green-50',
-      'infanteria': 'text-blue-600 bg-blue-50',
-      'caballeria': 'text-purple-600 bg-purple-50',
-      'liderazgo': 'text-yellow-600 bg-yellow-50',
-      'ingenieros': 'text-gray-600 bg-gray-50'
+      arqueria: "text-green-600 bg-green-50",
+      infanteria: "text-blue-600 bg-blue-50",
+      caballeria: "text-purple-600 bg-purple-50",
+      liderazgo: "text-yellow-600 bg-yellow-50",
+      ingenieros: "text-gray-600 bg-gray-50",
     };
-    return colores[tipo] || 'text-gray-600 bg-gray-50';
+    return colores[tipo] || "text-gray-600 bg-gray-50";
   };
 
   if (loading) {
@@ -183,16 +197,14 @@ const MGEPage = () => {
             <div className="bg-white rounded-xl shadow-lg p-8 text-center">
               <div className="text-6xl mb-6">🏆</div>
               <h1 className="text-3xl font-bold text-gray-800 mb-4">
-                Postulación MGE
+                {t("mge.title")}
               </h1>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
                 <div className="text-4xl mb-4">⏳</div>
                 <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                  No hay eventos MGE activos
+                  {t("mge.noActiveEvents")}
                 </h3>
-                <p className="text-yellow-700">
-                  El administrador debe configurar un evento MGE antes de que puedas postularte.
-                </p>
+                <p className="text-yellow-700">{t("mge.noActiveEventsDesc")}</p>
               </div>
             </div>
           </main>
@@ -214,16 +226,22 @@ const MGEPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                  🏆 Postulación MGE
+                  🏆 {t("mge.title")}
                 </h1>
-                <p className="text-gray-600">
-                  Postúlate para el evento Mightiest Governor
-                </p>
+                <p className="text-gray-600">{t("mge.subtitle")}</p>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-500">Tipo de Evento</div>
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getTipoTropaColor(config.tipo_tropa)}`}>
-                  <span className="mr-1">{getTipoTropaIcon(config.tipo_tropa)}</span>
+                <div className="text-sm text-gray-500">
+                  {t("mge.eventType")}
+                </div>
+                <div
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getTipoTropaColor(
+                    config.tipo_tropa
+                  )}`}
+                >
+                  <span className="mr-1">
+                    {getTipoTropaIcon(config.tipo_tropa)}
+                  </span>
                   {config.tipo_tropa_display}
                 </div>
               </div>
@@ -233,17 +251,22 @@ const MGEPage = () => {
           {/* Formulario */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              ➕ {isUpdate ? 'Actualizar' : 'Registrar'} Postulación
+              ➕{" "}
+              {isUpdate
+                ? t("mge.updateApplication")
+                : t("mge.registerApplication")}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Comandantes */}
               <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">👨‍💼 Comandantes</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  {t("mge.commanders")}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-gray-700 text-sm font-bold mb-2">
-                      Comandante Principal *
+                      {t("mge.mainCommander")} *
                     </label>
                     <input
                       type="text"
@@ -251,13 +274,13 @@ const MGEPage = () => {
                       value={formData.comandante_principal}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Ej: Alejandro Magno"
+                      placeholder={t("mge.mainCommanderPlaceholder")}
                       required
                     />
                   </div>
                   <div>
                     <label className="block text-gray-700 text-sm font-bold mb-2">
-                      Comandante Pareja
+                      {t("mge.pairCommander")}
                     </label>
                     <input
                       type="text"
@@ -265,7 +288,7 @@ const MGEPage = () => {
                       value={formData.comandante_pareja}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Ej: Ricardo Corazón de León"
+                      placeholder={t("mge.pairCommanderPlaceholder")}
                     />
                   </div>
                 </div>
@@ -273,12 +296,14 @@ const MGEPage = () => {
 
               {/* Fotos */}
               <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">📸 Evidencias Requeridas</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  {t("mge.requiredEvidence")}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Equipamiento */}
                   <div>
                     <label className="block text-gray-700 text-sm font-bold mb-2">
-                      🛡️ Foto de Equipamiento *
+                      🛡️ {t("mge.equipmentPhoto")} *
                     </label>
                     <input
                       type="file"
@@ -288,23 +313,46 @@ const MGEPage = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required={!isUpdate}
                     />
-                    {userData?.foto_equipamiento_url && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600 mb-1">Imagen actual:</p>
+                    <div className="mt-3 flex items-start space-x-6">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {t("common.example")}:
+                        </p>
                         <img
-                          src={`http://localhost:8000/uploads/${userData.foto_equipamiento_url}`}
-                          alt="Equipamiento actual"
+                          src="https://servicios.puntossmart.com/img/equip.jpg"
+                          alt={t("kvk.ownDeathsPhoto")}
                           className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => openImageModal(`http://localhost:8000/uploads/${userData.foto_equipamiento_url}`)}
+                          onClick={() =>
+                            openImageModal(
+                              "https://servicios.puntossmart.com/img/equip.jpg"
+                            )
+                          }
                         />
                       </div>
-                    )}
+                      {userData?.foto_equipamiento_url && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 mb-1">
+                            {t("common.currentImage")}:
+                          </p>
+                          <img
+                            src={`http://localhost:8000/uploads/${userData.foto_equipamiento_url}`}
+                            alt={t("mge.equipmentPhoto")}
+                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() =>
+                              openImageModal(
+                                `http://localhost:8000/uploads/${userData.foto_equipamiento_url}`
+                              )
+                            }
+                          />
+                        </div>
+                      )}{" "}
+                    </div>
                   </div>
 
                   {/* Inscripciones */}
                   <div>
                     <label className="block text-gray-700 text-sm font-bold mb-2">
-                      📋 Foto de Inscripciones *
+                      📋 {t("mge.inscriptionsPhoto")} *
                     </label>
                     <input
                       type="file"
@@ -314,23 +362,46 @@ const MGEPage = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required={!isUpdate}
                     />
-                    {userData?.foto_inscripciones_url && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600 mb-1">Imagen actual:</p>
+                    <div className="mt-3 flex items-start space-x-6">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {t("common.example")}:
+                        </p>
                         <img
-                          src={`http://localhost:8000/uploads/${userData.foto_inscripciones_url}`}
-                          alt="Inscripciones actual"
+                          src="https://servicios.puntossmart.com/img/inscrip.jpg"
+                          alt={t("kvk.ownDeathsPhoto")}
                           className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => openImageModal(`http://localhost:8000/uploads/${userData.foto_inscripciones_url}`)}
+                          onClick={() =>
+                            openImageModal(
+                              "https://servicios.puntossmart.com/img/inscrip.jpg"
+                            )
+                          }
                         />
                       </div>
-                    )}
+                      {userData?.foto_inscripciones_url && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 mb-1">
+                            {t("common.currentImage")}:
+                          </p>
+                          <img
+                            src={`http://localhost:8000/uploads/${userData.foto_inscripciones_url}`}
+                            alt={t("mge.inscriptionsPhoto")}
+                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() =>
+                              openImageModal(
+                                `http://localhost:8000/uploads/${userData.foto_inscripciones_url}`
+                              )
+                            }
+                          />
+                        </div>
+                      )}{" "}
+                    </div>
                   </div>
 
                   {/* Comandantes */}
                   <div>
                     <label className="block text-gray-700 text-sm font-bold mb-2">
-                      👨‍💼 Foto de Comandantes *
+                      👨‍💼 {t("mge.commandersPhoto")} *
                     </label>
                     <input
                       type="file"
@@ -340,23 +411,46 @@ const MGEPage = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required={!isUpdate}
                     />
-                    {userData?.foto_comandantes_url && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600 mb-1">Imagen actual:</p>
+                    <div className="mt-3 flex items-start space-x-6">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {t("common.example")}:
+                        </p>
                         <img
-                          src={`http://localhost:8000/uploads/${userData.foto_comandantes_url}`}
-                          alt="Comandantes actual"
+                          src="https://servicios.puntossmart.com/img/cmr.jpg"
+                          alt={t("kvk.ownDeathsPhoto")}
                           className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => openImageModal(`http://localhost:8000/uploads/${userData.foto_comandantes_url}`)}
+                          onClick={() =>
+                            openImageModal(
+                              "https://servicios.puntossmart.com/img/cmr.jpg"
+                            )
+                          }
                         />
                       </div>
-                    )}
+                      {userData?.foto_comandantes_url && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 mb-1">
+                            {t("common.currentImage")}:
+                          </p>
+                          <img
+                            src={`http://localhost:8000/uploads/${userData.foto_comandantes_url}`}
+                            alt={t("mge.commandersPhoto")}
+                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() =>
+                              openImageModal(
+                                `http://localhost:8000/uploads/${userData.foto_comandantes_url}`
+                              )
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Cabezas Legendarias */}
                   <div>
                     <label className="block text-gray-700 text-sm font-bold mb-2">
-                      💀 Foto de Cabezas Legendarias *
+                      💀 {t("mge.legendaryHeadsPhoto")} *
                     </label>
                     <input
                       type="file"
@@ -366,17 +460,41 @@ const MGEPage = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       required={!isUpdate}
                     />
-                    {userData?.foto_cabezas_url && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600 mb-1">Imagen actual:</p>
+
+                    <div className="mt-3 flex items-start space-x-6">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {t("common.example")}:
+                        </p>
                         <img
-                          src={`http://localhost:8000/uploads/${userData.foto_cabezas_url}`}
-                          alt="Cabezas actual"
+                          src="https://servicios.puntossmart.com/img/head.jpg"
+                          alt={t("kvk.ownDeathsPhoto")}
                           className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => openImageModal(`http://localhost:8000/uploads/${userData.foto_cabezas_url}`)}
+                          onClick={() =>
+                            openImageModal(
+                              "https://servicios.puntossmart.com/img/head.jpg"
+                            )
+                          }
                         />
                       </div>
-                    )}
+                      {userData?.foto_cabezas_url && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 mb-1">
+                            {t("common.currentImage")}:
+                          </p>
+                          <img
+                            src={`http://localhost:8000/uploads/${userData.foto_cabezas_url}`}
+                            alt={t("mge.legendaryHeadsPhoto")}
+                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() =>
+                              openImageModal(
+                                `http://localhost:8000/uploads/${userData.foto_cabezas_url}`
+                              )
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -388,7 +506,7 @@ const MGEPage = () => {
                   onClick={loadModuleData}
                   className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  Cancelar
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -396,7 +514,11 @@ const MGEPage = () => {
                   className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
                 >
                   {saving && <ButtonSpinner />}
-                  <span>{isUpdate ? 'Actualizar' : 'Registrar'} Postulación</span>
+                  <span>
+                    {isUpdate
+                      ? t("mge.updateApplication")
+                      : t("mge.registerApplication")}
+                  </span>
                 </button>
               </div>
             </form>
@@ -409,11 +531,12 @@ const MGEPage = () => {
                 <div className="text-2xl mr-3">✅</div>
                 <div>
                   <h3 className="text-lg font-semibold text-green-800">
-                    Postulación Registrada
+                    {t("mge.applicationRegistered")}
                   </h3>
                   <p className="text-green-700">
-                    Tu postulación para {config.tipo_tropa_display} ha sido registrada exitosamente.
-                    Puedes actualizarla en cualquier momento antes del evento.
+                    {t("mge.applicationRegisteredDesc", {
+                      type: config.tipo_tropa_display,
+                    })}
                   </p>
                 </div>
               </div>

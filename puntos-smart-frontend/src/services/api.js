@@ -110,6 +110,14 @@ export const kvkAPI = {
       },
     });
   },
+
+  saveHonor: (formData) => {
+    return api.post("/kvk/save-honor.php", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };
 
 // API de MGE
@@ -162,7 +170,7 @@ export const adminAPI = {
     api.put("/admin/kvk-etapas.php", { id, ...data }),
   deleteKvKEtapa: (id) => api.delete("/admin/kvk-etapas.php", { data: { id } }),
   getKvkUserData: () => api.get("/admin/kvk-etapas.php?type=user_data"),
-
+  getKvkRanking: () => api.get("/admin/kvk-etapas.php?type=ranking"),
   // MGE Admin Endpoints
   setMGEConfig: (tipoTropa) =>
     api.post("/admin/set-mge-config.php", { tipo_tropa: tipoTropa }),

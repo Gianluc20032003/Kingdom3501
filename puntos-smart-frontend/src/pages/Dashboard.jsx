@@ -1,6 +1,8 @@
+// pages/Dashboard.jsx - Versión actualizada con traductor
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../contexts/TranslationContext';
 import { modulesAPI } from '../services/api';
 import { useAlert } from '../contexts/AlertContext';
 import Header from '../components/common/Header';
@@ -9,6 +11,7 @@ import Sidebar from '../components/common/Sidebar';
 const Dashboard = () => {
   const { user } = useAuth();
   const { showAlert } = useAlert();
+  const { t } = useTranslation();
   const [moduleConfigs, setModuleConfigs] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +27,7 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error loading module configs:', error);
-      showAlert('Error al cargar la configuración de módulos', 'error');
+      showAlert(t('errors.loadingData'), 'error');
     } finally {
       setLoading(false);
     }
@@ -33,8 +36,8 @@ const Dashboard = () => {
   const modules = [
     {
       key: 'fortalezas_barbaras',
-      name: 'Ranking Fortalezas Bárbaras',
-      description: 'Registra tus cofres semanales y compite',
+      name: t('nav.fortresses'),
+      description: t('fortresses.subtitle'),
       icon: '🏰',
       color: 'purple',
       path: '/fortalezas',
@@ -42,8 +45,8 @@ const Dashboard = () => {
     },
     {
       key: 'movilizacion',
-      name: 'Movilización de Alianza',
-      description: 'Registra tus puntos de movilización',
+      name: t('nav.mobilization'),
+      description: t('mobilization.subtitle'),
       icon: '🛒',
       color: 'blue',
       path: '/movilizacion',
@@ -51,8 +54,8 @@ const Dashboard = () => {
     },
     {
       key: 'kvk',
-      name: 'Formulario KvK',
-      description: 'Registro de batallas y Kill Points',
+      name: t('nav.kvk'),
+      description: t('kvk.subtitle'),
       icon: '⚔️',
       color: 'red',
       path: '/kvk',
@@ -60,8 +63,8 @@ const Dashboard = () => {
     },
     {
       key: 'mge',
-      name: 'Postulación MGE',
-      description: 'Postúlate para eventos MGE',
+      name: t('nav.mge'),
+      description: t('mge.subtitle'),
       icon: '🏆',
       color: 'yellow',
       path: '/mge',
@@ -69,8 +72,8 @@ const Dashboard = () => {
     },
     {
       key: 'aoo',
-      name: 'Inscripción AOO',
-      description: 'Regístrate para eventos AOO',
+      name: t('nav.aoo'),
+      description: t('aoo.subtitle'),
       icon: '👥',
       color: 'green',
       path: '/aoo',
@@ -120,28 +123,28 @@ const Dashboard = () => {
                 </svg>
               </div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                ¡Bienvenido, {user?.nombre_usuario}!
+                {t('dashboard.welcome', { username: user?.nombre_usuario })}
               </h1>
               <p className="text-gray-600 mb-6">
-                Selecciona un módulo del menú para comenzar a registrar tus actividades
+                {t('dashboard.subtitle')}
               </p>
               
               {/* Estadísticas rápidas */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="text-2xl mb-2">🏆</div>
-                  <h3 className="font-semibold text-gray-800">Rankings</h3>
-                  <p className="text-sm text-gray-600">Compite con otros jugadores</p>
+                  <h3 className="font-semibold text-gray-800">{t('dashboard.rankings')}</h3>
+                  <p className="text-sm text-gray-600">{t('dashboard.rankingsDesc')}</p>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="text-2xl mb-2">📈</div>
-                  <h3 className="font-semibold text-gray-800">Progreso</h3>
-                  <p className="text-sm text-gray-600">Seguimiento de tu evolución</p>
+                  <h3 className="font-semibold text-gray-800">{t('dashboard.progress')}</h3>
+                  <p className="text-sm text-gray-600">{t('dashboard.progressDesc')}</p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
                   <div className="text-2xl mb-2">👥</div>
-                  <h3 className="font-semibold text-gray-800">Alianza</h3>
-                  <p className="text-sm text-gray-600">Colabora con tu alianza</p>
+                  <h3 className="font-semibold text-gray-800">{t('dashboard.alliance')}</h3>
+                  <p className="text-sm text-gray-600">{t('dashboard.allianceDesc')}</p>
                 </div>
               </div>
             </div>
@@ -150,7 +153,7 @@ const Dashboard = () => {
           {/* Módulos disponibles */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              Módulos Disponibles
+              {t('dashboard.availableModules')}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -172,7 +175,7 @@ const Dashboard = () => {
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2L15.09 8.26L22 9L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9L8.91 8.26L12 2Z" />
                           </svg>
-                          Con Ranking
+                          {t('dashboard.withRanking')}
                         </div>
                       )}
                     </div>
@@ -185,10 +188,10 @@ const Dashboard = () => {
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">📋</div>
                 <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  No hay módulos disponibles
+                  {t('dashboard.noModules')}
                 </h3>
                 <p className="text-gray-500">
-                  Contacta al administrador para habilitar módulos
+                  {t('dashboard.noModulesDesc')}
                 </p>
               </div>
             )}
@@ -199,14 +202,14 @@ const Dashboard = () => {
             <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-lg p-8 mt-8">
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <h3 className="text-xl font-bold mb-2">Panel de Administración</h3>
-                  <p className="opacity-80">Gestiona usuarios, módulos y configuraciones</p>
+                  <h3 className="text-xl font-bold mb-2">{t('dashboard.adminPanel')}</h3>
+                  <p className="opacity-80">{t('dashboard.adminPanelDesc')}</p>
                 </div>
                 <Link
                   to="/admin"
                   className="bg-white text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
                 >
-                  Ir a Admin
+                  {t('dashboard.goToAdmin')}
                 </Link>
               </div>
             </div>

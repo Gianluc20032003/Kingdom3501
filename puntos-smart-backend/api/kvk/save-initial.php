@@ -1,6 +1,6 @@
 <?php
 // kvk/save-initial.php
-// Guardar Kill Points iniciales antes del KvK
+// Guardar Kill T4/T5 iniciales antes del KvK (ACTUALIZADO)
 
 require_once '../config/config.php';
 
@@ -11,17 +11,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $user = getAuthenticatedUser();
 
 // Validar entrada
-$killPointsIniciales = $_POST['kill_points_iniciales'] ?? null;
+$killT4Iniciales = $_POST['kill_t4_iniciales'] ?? null;
+$killT5Iniciales = $_POST['kill_t5_iniciales'] ?? null;
 $muertesPropiasIniciales = $_POST['muertes_propias_iniciales'] ?? null;
 
-if (empty($killPointsIniciales) || !is_numeric($killPointsIniciales) || $killPointsIniciales < 0) {
-    sendResponse(false, 'Los Kill Points iniciales deben ser un número válido mayor o igual a 0', null, 400);
+if (empty($killT4Iniciales) || !is_numeric($killT4Iniciales) || $killT4Iniciales < 0) {
+    sendResponse(false, 'Los Kill T4 iniciales deben ser un número válido mayor o igual a 0', null, 400);
+}
+if (empty($killT5Iniciales) || !is_numeric($killT5Iniciales) || $killT5Iniciales < 0) {
+    sendResponse(false, 'Los Kill T5 iniciales deben ser un número válido mayor o igual a 0', null, 400);
 }
 if (empty($muertesPropiasIniciales) || !is_numeric($muertesPropiasIniciales) || $muertesPropiasIniciales < 0) {
     sendResponse(false, 'Las muertes propias iniciales deben ser un número válido mayor o igual a 0', null, 400);
 }
 
-$killPointsIniciales = (int) $killPointsIniciales;
+$killT4Iniciales = (int) $killT4Iniciales;
+$killT5Iniciales = (int) $killT5Iniciales;
 $muertesPropiasIniciales = (int) $muertesPropiasIniciales;
 
 try {
@@ -39,7 +44,7 @@ try {
     $fotoInicialUrl = null;
     $fotoMuertesInicialesUrl = null;
     
-    // Procesar imagen de kill points
+    // Procesar imagen de kills iniciales
     if (isset($_FILES['foto_inicial']) && $_FILES['foto_inicial']['error'] === UPLOAD_ERR_OK) {
         try {
             $fotoInicialUrl = uploadFile($_FILES['foto_inicial'], 'kvk');
@@ -52,12 +57,12 @@ try {
                 }
             }
         } catch (Exception $e) {
-            sendResponse(false, 'Error al subir la imagen de kill points: ' . $e->getMessage(), null, 400);
+            sendResponse(false, 'Error al subir la imagen de kills iniciales: ' . $e->getMessage(), null, 400);
         }
     } else if ($existingRecord) {
         $fotoInicialUrl = $existingRecord['foto_inicial_url'];
     } else {
-        sendResponse(false, 'La foto de kill points es requerida para el registro inicial', null, 400);
+        sendResponse(false, 'La foto de kills iniciales es requerida para el registro inicial', null, 400);
     }
     
     // Procesar imagen de muertes iniciales
@@ -85,38 +90,38 @@ try {
         // Actualizar registro existente
         $stmt = $pdo->prepare("
             UPDATE kvk_datos 
-            SET kill_points_iniciales = ?, muertes_propias_iniciales = ?, 
+            SET kill_t4_iniciales = ?, kill_t5_iniciales = ?, muertes_propias_iniciales = ?, 
                 foto_inicial_url = ?, foto_muertes_iniciales_url = ?
             WHERE id = ?
         ");
         $stmt->execute([
-            $killPointsIniciales, $muertesPropiasIniciales, 
+            $killT4Iniciales, $killT5Iniciales, $muertesPropiasIniciales, 
             $fotoInicialUrl, $fotoMuertesInicialesUrl, $existingRecord['id']
         ]);
         
-        sendResponse(true, 'Kill Points iniciales actualizados exitosamente');
+        sendResponse(true, 'Datos iniciales actualizados exitosamente');
     } else {
         // Crear nuevo registro
         $stmt = $pdo->prepare("
             INSERT INTO kvk_datos (
-                usuario_id, kill_points_iniciales, muertes_propias_iniciales, 
+                usuario_id, kill_t4_iniciales, kill_t5_iniciales, muertes_propias_iniciales, 
                 foto_inicial_url, foto_muertes_iniciales_url
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
-            $user->user_id, $killPointsIniciales, $muertesPropiasIniciales, 
+            $user->user_id, $killT4Iniciales, $killT5Iniciales, $muertesPropiasIniciales, 
             $fotoInicialUrl, $fotoMuertesInicialesUrl
         ]);
         
-        sendResponse(true, 'Kill Points iniciales registrados exitosamente');
+        sendResponse(true, 'Datos iniciales registrados exitosamente');
     }
     
 } catch (PDOException $e) {
-    error_log('Error guardando Kill Points iniciales: ' . $e->getMessage());
+    error_log('Error guardando datos iniciales: ' . $e->getMessage());
     sendResponse(false, 'Error interno del servidor', null, 500);
 } catch (Exception $e) {
-    error_log('Error guardando Kill Points iniciales: ' . $e->getMessage());
+    error_log('Error guardando datos iniciales: ' . $e->getMessage());
     sendResponse(false, 'Error interno del servidor', null, 500);
 }
 ?>

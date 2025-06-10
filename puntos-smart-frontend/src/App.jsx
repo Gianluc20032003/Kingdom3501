@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
+import { TranslationProvider } from "./contexts/TranslationContext";
 
 // Componentes de páginas
 import LoginPage from "./pages/auth/LoginPage";
@@ -60,114 +61,116 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Routes>
-        {/* Rutas públicas */}
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          }
-        />
+    <TranslationProvider>
+      <div className="min-h-screen bg-gray-100">
+        <Routes>
+          {/* Rutas públicas */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
 
-        {/* Rutas protegidas */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+          {/* Rutas protegidas */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/fortalezas"
-          element={
-            <ProtectedRoute>
-              <FortalezasPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/fortalezas"
+            element={
+              <ProtectedRoute>
+                <FortalezasPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/movilizacion"
-          element={
-            <ProtectedRoute>
-              <MovilizacionPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/movilizacion"
+            element={
+              <ProtectedRoute>
+                <MovilizacionPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/kvk"
-          element={
-            <ProtectedRoute>
-              <KvKPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/kvk"
+            element={
+              <ProtectedRoute>
+                <KvKPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/mge"
-          element={
-            <ProtectedRoute>
-              <MGEPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/mge"
+            element={
+              <ProtectedRoute>
+                <MGEPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/aoo"
-          element={
-            <ProtectedRoute>
-              <AOOPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/aoo"
+            element={
+              <ProtectedRoute>
+                <AOOPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <AdminPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin-aoo"
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <AOOAdminPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/admin-aoo"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <AOOAdminPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin-kvk"
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <KvkAdminPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/admin-kvk"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <KvkAdminPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin-mge"
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <MGEAdminPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/admin-mge"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <MGEAdminPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Redirecciones */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </div>
+          {/* Redirecciones */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </div>
+    </TranslationProvider>
   );
 }
 

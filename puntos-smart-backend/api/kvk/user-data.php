@@ -1,6 +1,6 @@
 <?php
 // kvk/user-data.php
-// Obtener datos del usuario para KvK
+// Obtener datos del usuario para KvK (ACTUALIZADO)
 
 require_once '../config/config.php';
 
@@ -15,7 +15,7 @@ try {
 
     // Obtener datos iniciales de KvK del usuario
     $stmt = $pdo->prepare("
-        SELECT kill_points_iniciales, muertes_propias_iniciales, 
+        SELECT kill_t4_iniciales, kill_t5_iniciales, muertes_propias_iniciales, 
                foto_inicial_url, foto_muertes_iniciales_url, fecha_registro
         FROM kvk_datos 
         WHERE usuario_id = ?
@@ -25,14 +25,23 @@ try {
     $stmt->execute([$user->user_id]);
     $kvkData = $stmt->fetch();
 
+    // Obtener datos de honor del usuario
+    $stmt = $pdo->prepare("
+        SELECT honor_cantidad, foto_honor_url, fecha_registro
+        FROM kvk_honor 
+        WHERE usuario_id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$user->user_id]);
+    $honorData = $stmt->fetch();
+
     // Obtener etapas disponibles
     $stmt = $pdo->query("
-        SELECT id, nombre_etapa, orden_etapa
-        FROM kvk_etapas 
-        WHERE activa = 1
-        ORDER BY orden_etapa ASC
+    SELECT id, nombre_etapa, orden_etapa, activa
+    FROM kvk_etapas 
+    ORDER BY orden_etapa ASC
     ");
-    $etapas = $stmt->fetchAll();
+    $etapas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Obtener batallas del usuario por etapa
     $batallas = [];
@@ -58,10 +67,32 @@ try {
         $batallas = $stmt->fetchAll();
     }
 
+    // Obtener puntuación del usuario usando la vista
+    $stmt = $pdo->prepare("
+        SELECT 
+            honor_cantidad,
+            total_kill_t4_batallas,
+            total_kill_t5_batallas,
+            total_muertes_t4_batallas,
+            total_muertes_t5_batallas,
+            puntos_honor,
+            puntos_kill_t4,
+            puntos_kill_t5,
+            puntos_muertes_t4,
+            puntos_muertes_t5,
+            puntuacion_total
+        FROM vw_puntuacion_usuarios 
+        WHERE usuario_id = ?
+    ");
+    $stmt->execute([$user->user_id]);
+    $puntuacion = $stmt->fetch();
+
     $response = [
         'kvk_inicial' => $kvkData ?: null,
+        'honor_data' => $honorData ?: null,
         'etapas' => $etapas,
-        'batallas' => $batallas
+        'batallas' => $batallas,
+        'puntuacion' => $puntuacion ?: null
     ];
 
     sendResponse(true, 'Datos de KvK obtenidos exitosamente', $response);
