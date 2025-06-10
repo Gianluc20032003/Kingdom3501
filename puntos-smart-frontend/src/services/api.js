@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Configuración base de axios
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: "/api", // Vite proxy redirigirá a tu servidor
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -15,12 +15,6 @@ api.interceptors.request.use(
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(
-        "✅ Authorization header agregado:",
-        config.headers.Authorization
-      ); // 👈 AGREGAR ESTA LÍNEA
-    } else {
-      console.log("❌ No hay token en localStorage"); // 👈 AGREGAR ESTA LÍNEA
     }
     return config;
   },
@@ -101,8 +95,6 @@ export const movilizacionAPI = {
 export const kvkAPI = {
   getUserData: () => api.get("/kvk/user-data.php"),
 
-  getEtapas: () => api.get("/kvk/etapas.php"),
-
   saveInitial: (formData) => {
     return api.post("/kvk/save-initial.php", formData, {
       headers: {
@@ -157,44 +149,36 @@ export const aooAPI = {
 // API de Admin
 export const adminAPI = {
   getUsuarios: () => api.get("/admin/usuarios.php"),
-
   updateUsuario: (userId, userData) =>
     api.post("/admin/update-usuario.php", { user_id: userId, ...userData }),
-
   deleteUsuario: (userId) =>
     api.post("/admin/delete-usuario.php", { user_id: userId }),
-
   getEstadisticas: () => api.get("/admin/estadisticas.php"),
 
-  createKvKEtapa: (etapaData) =>
-    api.post("/admin/create-kvk-etapa.php", etapaData),
+  // KvK Admin Endpoints
+  getKvkEtapas: () => api.get("/admin/kvk-etapas.php"),
+  createKvKEtapa: (etapaData) => api.post("/admin/kvk-etapas.php", etapaData),
+  updateKvKEtapa: (id, data) =>
+    api.put("/admin/kvk-etapas.php", { id, ...data }),
+  deleteKvKEtapa: (id) => api.delete("/admin/kvk-etapas.php", { data: { id } }),
+  getKvkUserData: () => api.get("/admin/kvk-etapas.php?type=user_data"),
 
-  updateKvKEtapa: (etapaId, etapaData) =>
-    api.post("/admin/update-kvk-etapa.php", {
-      etapa_id: etapaId,
-      ...etapaData,
-    }),
-
+  // MGE Admin Endpoints
   setMGEConfig: (tipoTropa) =>
     api.post("/admin/set-mge-config.php", { tipo_tropa: tipoTropa }),
-
   setAOOConfig: (horario) => api.post("/admin/set-aoo-config.php", { horario }),
-
   getAOOEvents: () => api.get("/admin/aoo-config.php"),
-
   createAOOEvent: (horario) =>
     api.post("/admin/aoo-config.php", { action: "create", horario }),
-
   toggleAOOEvent: (eventId, activo) =>
     api.post("/admin/aoo-config.php", {
       action: "toggle",
       event_id: eventId,
       activo,
     }),
-
+  getAOOInscripciones: () => api.get("/aoo/inscripciones.php"),
   deleteAOOEvent: (eventId) =>
     api.post("/admin/aoo-config.php", { action: "delete", event_id: eventId }),
-
   getAOOStats: () => api.get("/admin/aoo-stats.php"),
 };
 

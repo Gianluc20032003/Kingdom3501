@@ -361,120 +361,117 @@ const AOOPage = () => {
                 </form>
               </div>
 
-              {/* Lista de inscritos (solo para admin) */}
-              {user?.es_admin && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                    📋 Lista de Inscritos ({inscripciones.length})
-                  </h2>
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                  📋 Lista de Inscritos ({inscripciones.length})
+                </h2>
 
-                  {inscripciones.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                              Usuario
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                              Tropas
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                              Rally
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                              Guarnición
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                              Comandantes
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                              Foto
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                              Fecha
-                            </th>
+                {inscripciones.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                            Usuario
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                            Tropas
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                            Rally
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                            Guarnición
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                            Comandantes
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                            Foto
+                          </th>
+                          <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                            Fecha
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inscripciones.map((inscripcion, index) => (
+                          <tr
+                            key={index}
+                            className="border-t hover:bg-gray-50 transition-colors"
+                          >
+                            <td className="px-4 py-4">
+                              <div className="font-semibold text-gray-800">
+                                {inscripcion.nombre_usuario}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <span className="font-medium">
+                                {new Intl.NumberFormat("es-ES").format(
+                                  inscripcion.cantidad_tropas
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              {inscripcion.puede_liderar_rally ? (
+                                <span className="text-green-600">✅</span>
+                              ) : (
+                                <span className="text-gray-400">❌</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              {inscripcion.puede_liderar_guarnicion ? (
+                                <span className="text-green-600">✅</span>
+                              ) : (
+                                <span className="text-gray-400">❌</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="max-w-xs truncate text-sm">
+                                {inscripcion.comandantes_disponibles}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              {inscripcion.foto_comandantes_url ? (
+                                <img
+                                  src={`http://localhost:8000/uploads/${inscripcion.foto_comandantes_url}`}
+                                  alt="Comandantes"
+                                  className="w-12 h-12 object-cover rounded mx-auto cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() =>
+                                    openImageModal(
+                                      `http://localhost:8000/uploads/${inscripcion.foto_comandantes_url}`
+                                    )
+                                  }
+                                />
+                              ) : (
+                                <span className="text-gray-400 text-sm">
+                                  Sin foto
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <span className="text-sm text-gray-600">
+                                {formatDate(inscripcion.fecha_inscripcion)}
+                              </span>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {inscripciones.map((inscripcion, index) => (
-                            <tr
-                              key={index}
-                              className="border-t hover:bg-gray-50 transition-colors"
-                            >
-                              <td className="px-4 py-4">
-                                <div className="font-semibold text-gray-800">
-                                  {inscripcion.nombre_usuario}
-                                </div>
-                              </td>
-                              <td className="px-4 py-4 text-center">
-                                <span className="font-medium">
-                                  {new Intl.NumberFormat("es-ES").format(
-                                    inscripcion.cantidad_tropas
-                                  )}
-                                </span>
-                              </td>
-                              <td className="px-4 py-4 text-center">
-                                {inscripcion.puede_liderar_rally ? (
-                                  <span className="text-green-600">✅</span>
-                                ) : (
-                                  <span className="text-gray-400">❌</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-4 text-center">
-                                {inscripcion.puede_liderar_guarnicion ? (
-                                  <span className="text-green-600">✅</span>
-                                ) : (
-                                  <span className="text-gray-400">❌</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-4">
-                                <div className="max-w-xs truncate text-sm">
-                                  {inscripcion.comandantes_disponibles}
-                                </div>
-                              </td>
-                              <td className="px-4 py-4 text-center">
-                                {inscripcion.foto_comandantes_url ? (
-                                  <img
-                                    src={`http://localhost:8000/uploads/${inscripcion.foto_comandantes_url}`}
-                                    alt="Comandantes"
-                                    className="w-12 h-12 object-cover rounded mx-auto cursor-pointer hover:opacity-80 transition-opacity"
-                                    onClick={() =>
-                                      openImageModal(
-                                        `http://localhost:8000/uploads/${inscripcion.foto_comandantes_url}`
-                                      )
-                                    }
-                                  />
-                                ) : (
-                                  <span className="text-gray-400 text-sm">
-                                    Sin foto
-                                  </span>
-                                )}
-                              </td>
-                              <td className="px-4 py-4 text-center">
-                                <span className="text-sm text-gray-600">
-                                  {formatDate(inscripcion.fecha_inscripcion)}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="text-4xl mb-4">📝</div>
-                      <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                        No hay inscripciones todavía
-                      </h3>
-                      <p className="text-gray-500">
-                        Los usuarios podrán inscribirse cuando haya un evento
-                        AOO configurado
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-4">📝</div>
+                    <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                      No hay inscripciones todavía
+                    </h3>
+                    <p className="text-gray-500">
+                      Los usuarios podrán inscribirse cuando haya un evento AOO
+                      configurado
+                    </p>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </main>

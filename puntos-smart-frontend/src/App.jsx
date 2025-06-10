@@ -12,7 +12,8 @@ import MGEPage from "./pages/modules/MGEPage";
 import AOOPage from "./pages/modules/AOOPage";
 import AdminPage from "./pages/modules/AdminPage";
 import AOOAdminPage from "./pages/admin/AOOAdminPage";
-
+import MGEAdminPage from "./pages/admin/MGEAdminPage";
+import KvkAdminPage from "./pages/admin/KvkAdminPage";
 // Componente de loading
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 
@@ -140,6 +141,24 @@ function App() {
           element={
             <ProtectedRoute requireAdmin={true}>
               <AOOAdminPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-kvk"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <KvkAdminPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-mge"
+          element={
+            <ProtectedRoute requireAdmin={true}>
+              <MGEAdminPage />
             </ProtectedRoute>
           }
         />

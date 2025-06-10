@@ -11,28 +11,30 @@ const KvKPage = () => {
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [userData, setUserData] = useState(null);
+  const [activeTab, setActiveTab] = useState('inicial');
+  const [kvkData, setKvkData] = useState(null);
   const [etapas, setEtapas] = useState([]);
-  const [batallas, setBatallas] = useState({});
-  const [progreso, setProgreso] = useState({});
+  const [batallas, setBatallas] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalImage, setModalImage] = useState('');
-  const [activeTab, setActiveTab] = useState('inicial');
-  
+
   // Estados para formularios
-  const [formInicial, setFormInicial] = useState({
+  const [initialForm, setInitialForm] = useState({
     kill_points_iniciales: '',
-    foto_inicial: null
+    muertes_propias_iniciales: '',
+    foto_inicial: null,
+    foto_muertes_iniciales: null,
   });
-  
-  const [formBatalla, setFormBatalla] = useState({
+
+  const [battleForm, setBattleForm] = useState({
     etapa_id: '',
     kill_points: '',
     kill_t4: '',
     kill_t5: '',
-    muertes_propias: '',
+    muertes_propias_t4: '',
+    muertes_propias_t5: '',
     foto_batalla: null,
-    foto_muertes: null
+    foto_muertes: null,
   });
 
   useEffect(() => {
@@ -43,27 +45,20 @@ const KvKPage = () => {
     try {
       setLoading(true);
       const response = await kvkAPI.getUserData();
-      
+
       if (response.success) {
         const data = response.data;
-        setUserData(data.kvk_inicial);
+        setKvkData(data.kvk_inicial);
         setEtapas(data.etapas || []);
-        setBatallas(data.batallas || {});
-        setProgreso(data.progreso || {});
-        
+        setBatallas(data.batallas || []);
+
         // Llenar formulario inicial si hay datos
         if (data.kvk_inicial) {
-          setFormInicial(prev => ({
+          setInitialForm(prev => ({
             ...prev,
-            kill_points_iniciales: data.kvk_inicial.kill_points_iniciales || ''
+            kill_points_iniciales: data.kvk_inicial.kill_points_iniciales || '',
+            muertes_propias_iniciales: data.kvk_inicial.muertes_propias_iniciales || '',
           }));
-        }
-        
-        // Establecer tab inicial basado en progreso
-        if (!data.kvk_inicial) {
-          setActiveTab('inicial');
-        } else if (data.etapas.length > 0) {
-          setActiveTab('batallas');
         }
       }
     } catch (error) {
@@ -74,72 +69,77 @@ const KvKPage = () => {
     }
   };
 
-  const handleInicialInputChange = (e) => {
+  const handleInitialInputChange = (e) => {
     const { name, value, files } = e.target;
-    
-    if (name === 'foto_inicial' && files[0]) {
+
+    if ((name === 'foto_inicial' || name === 'foto_muertes_iniciales') && files[0]) {
       const file = files[0];
       const errors = validateFile(file);
-      
+
       if (errors.length > 0) {
         showAlert(errors.join(', '), 'error');
         e.target.value = '';
         return;
       }
-      
-      setFormInicial(prev => ({ ...prev, [name]: file }));
+
+      setInitialForm(prev => ({ ...prev, [name]: file }));
     } else {
-      setFormInicial(prev => ({ ...prev, [name]: value }));
+      setInitialForm(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleBatallaInputChange = (e) => {
+  const handleBattleInputChange = (e) => {
     const { name, value, files } = e.target;
-    
+
     if ((name === 'foto_batalla' || name === 'foto_muertes') && files[0]) {
       const file = files[0];
       const errors = validateFile(file);
-      
+
       if (errors.length > 0) {
         showAlert(errors.join(', '), 'error');
         e.target.value = '';
         return;
       }
-      
-      setFormBatalla(prev => ({ ...prev, [name]: file }));
+
+      setBattleForm(prev => ({ ...prev, [name]: file }));
     } else {
-      setFormBatalla(prev => ({ ...prev, [name]: value }));
+      setBattleForm(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleSubmitInicial = async (e) => {
+  const handleInitialSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formInicial.kill_points_iniciales || formInicial.kill_points_iniciales < 0) {
-      showAlert('Los Kill Points deben ser un número válido', 'error');
+
+    if (!initialForm.kill_points_iniciales || initialForm.kill_points_iniciales < 0) {
+      showAlert('Los Kill Points iniciales deben ser un número válido', 'error');
+      return;
+    }
+    if (!initialForm.muertes_propias_iniciales || initialForm.muertes_propias_iniciales < 0) {
+      showAlert('Las muertes propias iniciales deben ser un número válido', 'error');
       return;
     }
 
-    const isNewRecord = !userData;
-    if (isNewRecord && !formInicial.foto_inicial) {
-      showAlert('La foto es requerida para el registro inicial', 'error');
+    const isNewRecord = !kvkData;
+    if (isNewRecord && (!initialForm.foto_inicial || !initialForm.foto_muertes_iniciales)) {
+      showAlert('Las fotos de kill points y muertes son requeridas para el registro inicial', 'error');
       return;
     }
 
     try {
       setSaving(true);
-      
+
       const submitData = createFormData({
-        kill_points_iniciales: formInicial.kill_points_iniciales,
-        foto_inicial: formInicial.foto_inicial
-      }, ['foto_inicial']);
+        kill_points_iniciales: initialForm.kill_points_iniciales,
+        muertes_propias_iniciales: initialForm.muertes_propias_iniciales,
+        foto_inicial: initialForm.foto_inicial,
+        foto_muertes_iniciales: initialForm.foto_muertes_iniciales,
+      }, ['foto_inicial', 'foto_muertes_iniciales']);
 
       const response = await kvkAPI.saveInitial(submitData);
-      
+
       if (response.success) {
         showAlert('Kill Points iniciales guardados exitosamente', 'success');
         await loadModuleData();
-        setActiveTab('batallas');
       } else {
         showAlert(response.message || 'Error al guardar datos', 'error');
       }
@@ -151,53 +151,65 @@ const KvKPage = () => {
     }
   };
 
-  const handleSubmitBatalla = async (e) => {
+  const handleBattleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formBatalla.etapa_id) {
+
+    if (!battleForm.etapa_id) {
       showAlert('Debe seleccionar una etapa', 'error');
       return;
     }
-    
-    if (!formBatalla.kill_points || formBatalla.kill_points < 0) {
+    if (!battleForm.kill_points || battleForm.kill_points < 0) {
       showAlert('Los Kill Points deben ser un número válido', 'error');
       return;
     }
+    if (battleForm.muertes_propias_t4 && battleForm.muertes_propias_t4 < 0) {
+      showAlert('Las muertes propias T4 deben ser un número válido', 'error');
+      return;
+    }
+    if (battleForm.muertes_propias_t5 && battleForm.muertes_propias_t5 < 0) {
+      showAlert('Las muertes propias T5 deben ser un número válido', 'error');
+      return;
+    }
 
-    const existingBatalla = batallas[formBatalla.etapa_id];
-    if (!existingBatalla && !formBatalla.foto_batalla) {
-      showAlert('La foto de batalla es requerida', 'error');
+    const existingBattle = batallas.find(b => b.etapa_id === parseInt(battleForm.etapa_id));
+    if (!existingBattle && (!battleForm.foto_batalla || !battleForm.foto_muertes)) {
+      showAlert('Las fotos de batalla y muertes son requeridas', 'error');
       return;
     }
 
     try {
       setSaving(true);
-      
+
       const submitData = createFormData({
-        etapa_id: formBatalla.etapa_id,
-        kill_points: formBatalla.kill_points,
-        kill_t4: formBatalla.kill_t4 || 0,
-        kill_t5: formBatalla.kill_t5 || 0,
-        muertes_propias: formBatalla.muertes_propias || 0,
-        foto_batalla: formBatalla.foto_batalla,
-        foto_muertes: formBatalla.foto_muertes
+        etapa_id: battleForm.etapa_id,
+        kill_points: battleForm.kill_points,
+        kill_t4: battleForm.kill_t4 || 0,
+        kill_t5: battleForm.kill_t5 || 0,
+        muertes_propias_t4: battleForm.muertes_propias_t4 || 0,
+        muertes_propias_t5: battleForm.muertes_propias_t5 || 0,
+        foto_batalla: battleForm.foto_batalla,
+        foto_muertes: battleForm.foto_muertes,
       }, ['foto_batalla', 'foto_muertes']);
 
       const response = await kvkAPI.saveBattle(submitData);
-      
+
       if (response.success) {
         showAlert('Datos de batalla guardados exitosamente', 'success');
         await loadModuleData();
         // Limpiar formulario
-        setFormBatalla({
+        setBattleForm({
           etapa_id: '',
           kill_points: '',
           kill_t4: '',
           kill_t5: '',
-          muertes_propias: '',
+          muertes_propias_t4: '',
+          muertes_propias_t5: '',
           foto_batalla: null,
-          foto_muertes: null
+          foto_muertes: null,
         });
+        // Limpiar inputs de archivo
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => input.value = '');
       } else {
         showAlert(response.message || 'Error al guardar datos', 'error');
       }
@@ -209,20 +221,30 @@ const KvKPage = () => {
     }
   };
 
-  const selectBatallaForEdit = (etapaId) => {
-    const batalla = batallas[etapaId];
+  const loadBattleData = (etapaId) => {
+    const batalla = batallas.find(b => b.etapa_id === parseInt(etapaId));
     if (batalla) {
-      setFormBatalla({
+      setBattleForm({
         etapa_id: etapaId,
-        kill_points: batalla.kill_points,
+        kill_points: batalla.kill_points || '',
         kill_t4: batalla.kill_t4 || '',
         kill_t5: batalla.kill_t5 || '',
-        muertes_propias: batalla.muertes_propias || '',
+        muertes_propias_t4: batalla.muertes_propias_t4 || '',
+        muertes_propias_t5: batalla.muertes_propias_t5 || '',
         foto_batalla: null,
-        foto_muertes: null
+        foto_muertes: null,
       });
     } else {
-      setFormBatalla(prev => ({ ...prev, etapa_id: etapaId }));
+      setBattleForm({
+        etapa_id: etapaId,
+        kill_points: '',
+        kill_t4: '',
+        kill_t5: '',
+        muertes_propias_t4: '',
+        muertes_propias_t5: '',
+        foto_batalla: null,
+        foto_muertes: null,
+      });
     }
   };
 
@@ -261,91 +283,64 @@ const KvKPage = () => {
                   ⚔️ Kingdom vs Kingdom (KvK)
                 </h1>
                 <p className="text-gray-600">
-                  Registra tus Kill Points iniciales y datos de cada batalla
+                  Registra tus Kill Points y batallas durante los eventos KvK
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-500">Progreso</div>
+                <div className="text-sm text-gray-500">Estado KvK</div>
                 <div className="text-2xl font-bold text-red-600">
-                  {progreso.porcentaje_completado || 0}%
+                  {kvkData ? 'Registrado' : 'Pendiente'}
                 </div>
-              </div>
-            </div>
-            
-            {/* Barra de progreso */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  Progreso del KvK
-                </span>
-                <span className="text-sm font-bold text-gray-800">
-                  {progreso.etapas_completadas || 0} / {progreso.etapas_totales || 0} etapas
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="h-3 rounded-full transition-all duration-300 bg-gradient-to-r from-red-500 to-orange-500"
-                  style={{
-                    width: `${progreso.porcentaje_completado || 0}%`
-                  }}
-                ></div>
-              </div>
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-xs text-gray-600">
-                  {userData ? '✅ Datos iniciales' : '⏳ Pendiente inicial'}
-                </span>
-                <span className="text-sm font-semibold text-red-600">
-                  {progreso.porcentaje_completado === 100 ? '🏆 Completado' : '📊 En progreso'}
-                </span>
               </div>
             </div>
           </div>
 
-          {/* Tabs */}
+          {/* Pestañas */}
           <div className="bg-white rounded-xl shadow-lg">
-            <div className="flex border-b">
-              <button
-                onClick={() => setActiveTab('inicial')}
-                className={`px-6 py-4 font-semibold transition-colors ${
-                  activeTab === 'inicial'
-                    ? 'border-b-2 border-red-500 text-red-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                📊 Kill Points Iniciales
-                {userData && <span className="ml-2 text-green-500">✅</span>}
-              </button>
-              <button
-                onClick={() => setActiveTab('batallas')}
-                className={`px-6 py-4 font-semibold transition-colors ${
-                  activeTab === 'batallas'
-                    ? 'border-b-2 border-red-500 text-red-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                ⚔️ Batallas ({progreso.etapas_completadas || 0}/{progreso.etapas_totales || 0})
-              </button>
-              <button
-                onClick={() => setActiveTab('resumen')}
-                className={`px-6 py-4 font-semibold transition-colors ${
-                  activeTab === 'resumen'
-                    ? 'border-b-2 border-red-500 text-red-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                📈 Resumen
-              </button>
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8 px-6">
+                <button
+                  onClick={() => setActiveTab('inicial')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'inicial'
+                      ? 'border-red-500 text-red-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  📊 Kill Points Iniciales
+                </button>
+                <button
+                  onClick={() => setActiveTab('batallas')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'batallas'
+                      ? 'border-red-500 text-red-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  ⚔️ Batallas
+                </button>
+                <button
+                  onClick={() => setActiveTab('resumen')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'resumen'
+                      ? 'border-red-500 text-red-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  📈 Resumen
+                </button>
+              </nav>
             </div>
 
             <div className="p-6">
               {/* Tab: Kill Points Iniciales */}
               {activeTab === 'inicial' && (
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                    📊 Kill Points Iniciales
-                  </h2>
-                  
-                  <form onSubmit={handleSubmitInicial} className="space-y-6">
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Kill Points Antes del KvK
+                  </h3>
+
+                  <form onSubmit={handleInitialSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -354,10 +349,10 @@ const KvKPage = () => {
                         <input
                           type="number"
                           name="kill_points_iniciales"
-                          value={formInicial.kill_points_iniciales}
-                          onChange={handleInicialInputChange}
+                          value={initialForm.kill_points_iniciales}
+                          onChange={handleInitialInputChange}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                          placeholder="Ej: 1500000"
+                          placeholder="Ej: 150000000"
                           min="0"
                           required
                         />
@@ -368,29 +363,96 @@ const KvKPage = () => {
 
                       <div>
                         <label className="block text-gray-700 text-sm font-bold mb-2">
+                          Muertes Propias Iniciales (T4+T5)
+                        </label>
+                        <input
+                          type="number"
+                          name="muertes_propias_iniciales"
+                          value={initialForm.muertes_propias_iniciales}
+                          onChange={handleInitialInputChange}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="Ej: 50000"
+                          min="0"
+                          required
+                        />
+                        <p className="text-sm text-gray-500 mt-1">
+                          Muertes propias antes de iniciar el KvK
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">
                           Foto de Kill Points
                         </label>
                         <input
                           type="file"
                           name="foto_inicial"
-                          onChange={handleInicialInputChange}
+                          onChange={handleInitialInputChange}
                           accept="image/*"
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                          required={!userData}
+                          required={!kvkData}
                         />
                         <p className="text-sm text-gray-500 mt-1">
-                          Captura antes de iniciar el KvK
+                          Captura de tus Kill Points iniciales
                         </p>
-
-                        {/* Preview imagen actual */}
-                        {userData?.foto_inicial_url && (
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-600 mb-2">
+                            Ejemplo:
+                          </p>
+                          <img
+                            src="https://servicios.puntossmart.com/img/no-img.jpg"
+                            alt="Ejemplo Kill Points"
+                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => openImageModal('https://servicios.puntossmart.com/img/no-img.jpg')}
+                          />
+                        </div>
+                        {kvkData?.foto_inicial_url && (
                           <div className="mt-3">
                             <p className="text-sm text-gray-600 mb-2">Imagen actual:</p>
                             <img
-                              src={`http://localhost:8000/uploads/${userData.foto_inicial_url}`}
-                              alt="Foto actual"
+                              src={`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`}
+                              alt="Foto inicial"
                               className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => openImageModal(`http://localhost:8000/uploads/${userData.foto_inicial_url}`)}
+                              onClick={() => openImageModal(`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`)}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                          Foto de Muertes Propias
+                        </label>
+                        <input
+                          type="file"
+                          name="foto_muertes_iniciales"
+                          onChange={handleInitialInputChange}
+                          accept="image/*"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          required={!kvkData}
+                        />
+                        <p className="text-sm text-gray-500 mt-1">
+                          Captura de tus muertes propias iniciales (Salón de Héroes)
+                        </p>
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-600 mb-2">
+                            Ejemplo:
+                          </p>
+                          <img
+                            src="https://servicios.puntossmart.com/img/no-img.jpg"
+                            alt="Ejemplo Muertes Iniciales"
+                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => openImageModal('https://servicios.puntossmart.com/img/no-img.jpg')}
+                          />
+                        </div>
+                        {kvkData?.foto_muertes_iniciales_url && (
+                          <div className="mt-3">
+                            <p className="text-sm text-gray-600 mb-2">Imagen actual:</p>
+                            <img
+                              src={`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`}
+                              alt="Foto muertes iniciales"
+                              className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => openImageModal(`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`)}
                             />
                           </div>
                         )}
@@ -411,7 +473,7 @@ const KvKPage = () => {
                         className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
                       >
                         {saving && <ButtonSpinner />}
-                        <span>{userData ? 'Actualizar' : 'Guardar'} Kill Points</span>
+                        <span>{kvkData ? 'Actualizar' : 'Registrar'} Kill Points</span>
                       </button>
                     </div>
                   </form>
@@ -420,281 +482,325 @@ const KvKPage = () => {
 
               {/* Tab: Batallas */}
               {activeTab === 'batallas' && (
-                <div className="space-y-8">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                      ⚔️ Batallas del KvK
-                    </h2>
-                    
-                    {!userData && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                        <p className="text-yellow-800">
-                          ⚠️ Primero debes registrar tus Kill Points iniciales
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Registrar Batalla
+                  </h3>
 
-                  {/* Lista de etapas */}
-                  {etapas.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                      {etapas.map((etapa) => {
-                        const batalla = batallas[etapa.id];
-                        const isCompleted = !!batalla;
-                        
-                        return (
-                          <div
-                            key={etapa.id}
-                            className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                              isCompleted
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                            } ${
-                              formBatalla.etapa_id == etapa.id ? 'ring-2 ring-red-500' : ''
-                            }`}
-                            onClick={() => selectBatallaForEdit(etapa.id)}
+                  {etapas.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-4">⚙️</div>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                        No hay etapas configuradas
+                      </h3>
+                      <p className="text-gray-500">
+                        Contacta al administrador para configurar las etapas de KvK
+                      </p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleBattleSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Etapa de Batalla
+                          </label>
+                          <select
+                            name="etapa_id"
+                            value={battleForm.etapa_id}
+                            onChange={(e) => {
+                              handleBattleInputChange(e);
+                              loadBattleData(e.target.value);
+                            }}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            required
                           >
-                            <div className="flex items-center justify-between mb-2">
-                              <h3 className="font-semibold text-gray-800">{etapa.nombre_etapa}</h3>
-                              {isCompleted && <span className="text-green-500">✅</span>}
-                            </div>
-                            {batalla && (
-                              <div className="text-sm text-gray-600">
-                                <p>Kill Points: {formatNumber(batalla.kill_points)}</p>
-                                <p>Fecha: {formatDate(batalla.fecha_registro)}</p>
-                              </div>
-                            )}
+                            <option value="">Seleccionar etapa...</option>
+                            {etapas.map((etapa) => (
+                              <option key={etapa.id} value={etapa.id}>
+                                {etapa.nombre_etapa}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Kill Points de la Batalla
+                          </label>
+                          <input
+                            type="number"
+                            name="kill_points"
+                            value={battleForm.kill_points}
+                            onChange={handleBattleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            placeholder="Ej: 175000000"
+                            min="0"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Kills T4
+                          </label>
+                          <input
+                            type="number"
+                            name="kill_t4"
+                            value={battleForm.kill_t4}
+                            onChange={handleBattleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Kills T5
+                          </label>
+                          <input
+                            type="number"
+                            name="kill_t5"
+                            value={battleForm.kill_t5}
+                            onChange={handleBattleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Muertes Propias T4
+                          </label>
+                          <input
+                            type="number"
+                            name="muertes_propias_t4"
+                            value={battleForm.muertes_propias_t4}
+                            onChange={handleBattleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Muertes Propias T5
+                          </label>
+                          <input
+                            type="number"
+                            name="muertes_propias_t5"
+                            value={battleForm.muertes_propias_t5}
+                            onChange={handleBattleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Foto de Batalla
+                          </label>
+                          <input
+                            type="file"
+                            name="foto_batalla"
+                            onChange={handleBattleInputChange}
+                            accept="image/*"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          />
+                          <div className="mt-3">
+                            <p className="text-sm text-gray-600 mb-2">
+                              Ejemplo:
+                            </p>
+                            <img
+                              src="https://servicios.puntossmart.com/img/no-img.jpg"
+                              alt="Ejemplo Batalla"
+                              className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => openImageModal('https://servicios.puntossmart.com/img/no-img.jpg')}
+                            />
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                        </div>
 
-                  {/* Formulario de batalla */}
-                  <form onSubmit={handleSubmitBatalla} className="space-y-6 bg-gray-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {formBatalla.etapa_id && batallas[formBatalla.etapa_id] ? 'Actualizar' : 'Registrar'} Batalla
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Etapa
-                        </label>
-                        <select
-                          name="etapa_id"
-                          value={formBatalla.etapa_id}
-                          onChange={handleBatallaInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                          required
+                        <div>
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Foto de Muertes (Salón de Héroes)
+                          </label>
+                          <input
+                            type="file"
+                            name="foto_muertes"
+                            onChange={handleBattleInputChange}
+                            accept="image/*"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          />
+                          <div className="mt-3">
+                            <p className="text-sm text-gray-600 mb-2">
+                              Ejemplo:
+                            </p>
+                            <img
+                              src="https://servicios.puntossmart.com/img/no-img.jpg"
+                              alt="Ejemplo Muertes"
+                              className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => openImageModal('https://servicios.puntossmart.com/img/no-img.jpg')}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBattleForm({
+                              etapa_id: '',
+                              kill_points: '',
+                              kill_t4: '',
+                              kill_t5: '',
+                              muertes_propias_t4: '',
+                              muertes_propias_t5: '',
+                              foto_batalla: null,
+                              foto_muertes: null,
+                            });
+                          }}
+                          className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                         >
-                          <option value="">Seleccionar etapa...</option>
-                          {etapas.map((etapa) => (
-                            <option key={etapa.id} value={etapa.id}>
-                              {etapa.nombre_etapa} {batallas[etapa.id] ? '✅' : ''}
-                            </option>
-                          ))}
-                        </select>
+                          Limpiar
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={saving}
+                          className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                        >
+                          {saving && <ButtonSpinner />}
+                          <span>Guardar Batalla</span>
+                        </button>
                       </div>
-
-                      <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Kill Points
-                        </label>
-                        <input
-                          type="number"
-                          name="kill_points"
-                          value={formBatalla.kill_points}
-                          onChange={handleBatallaInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                          placeholder="Ej: 2500000"
-                          min="0"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Kills T4
-                        </label>
-                        <input
-                          type="number"
-                          name="kill_t4"
-                          value={formBatalla.kill_t4}
-                          onChange={handleBatallaInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                          placeholder="0"
-                          min="0"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Kills T5
-                        </label>
-                        <input
-                          type="number"
-                          name="kill_t5"
-                          value={formBatalla.kill_t5}
-                          onChange={handleBatallaInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                          placeholder="0"
-                          min="0"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Muertes Propias (T4+T5)
-                        </label>
-                        <input
-                          type="number"
-                          name="muertes_propias"
-                          value={formBatalla.muertes_propias}
-                          onChange={handleBatallaInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                          placeholder="0"
-                          min="0"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Foto de Batalla
-                        </label>
-                        <input
-                          type="file"
-                          name="foto_batalla"
-                          onChange={handleBatallaInputChange}
-                          accept="image/*"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                          required={!formBatalla.etapa_id || !batallas[formBatalla.etapa_id]}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Foto de Muertes <span className="text-gray-500">(Opcional)</span>
-                        </label>
-                        <input
-                          type="file"
-                          name="foto_muertes"
-                          onChange={handleBatallaInputChange}
-                          accept="image/*"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end space-x-4">
-                      <button
-                        type="button"
-                        onClick={() => setFormBatalla({
-                          etapa_id: '',
-                          kill_points: '',
-                          kill_t4: '',
-                          kill_t5: '',
-                          muertes_propias: '',
-                          foto_batalla: null,
-                          foto_muertes: null
-                        })}
-                        className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        Limpiar
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={saving || !userData}
-                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                      >
-                        {saving && <ButtonSpinner />}
-                        <span>Guardar Batalla</span>
-                      </button>
-                    </div>
-                  </form>
+                    </form>
+                  )}
                 </div>
               )}
 
               {/* Tab: Resumen */}
               {activeTab === 'resumen' && (
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                    📈 Resumen del KvK
-                  </h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Datos iniciales */}
-                    <div className="bg-blue-50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibold text-blue-800 mb-3">Kill Points Iniciales</h3>
-                      {userData ? (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Resumen de KvK
+                  </h3>
+
+                  {/* Kill Points Iniciales */}
+                  {kvkData && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-gray-800 mb-3">Kill Points Iniciales</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                         <div>
-                          <p className="text-2xl font-bold text-blue-600">
-                            {formatNumber(userData.kill_points_iniciales)}
-                          </p>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {formatDate(userData.fecha_registro)}
+                          <p className="text-sm text-gray-500">Kill Points</p>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {formatNumber(kvkData.kill_points_iniciales)}
                           </p>
                         </div>
-                      ) : (
-                        <p className="text-blue-600">No registrado</p>
-                      )}
-                    </div>
-
-                    {/* Total kills */}
-                    <div className="bg-red-50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibold text-red-800 mb-3">Total Kills</h3>
-                      <div>
-                        <p className="text-lg font-bold text-red-600">
-                          T4: {formatNumber(Object.values(batallas).reduce((sum, b) => sum + (b.kill_t4 || 0), 0))}
+                        <div>
+                          <p className="text-sm text-gray-500">Muertes Propias</p>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {formatNumber(kvkData.muertes_propias_iniciales)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-500">
+                          Registrado el {formatDate(kvkData.fecha_registro)}
                         </p>
-                        <p className="text-lg font-bold text-red-600">
-                          T5: {formatNumber(Object.values(batallas).reduce((sum, b) => sum + (b.kill_t5 || 0), 0))}
-                        </p>
+                        <div className="flex space-x-4">
+                          {kvkData.foto_inicial_url && (
+                            <div>
+                              <p className="text-sm text-gray-500 mb-1">Kill Points</p>
+                              <img
+                                src={`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`}
+                                alt="Kill Points iniciales"
+                                className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => openImageModal(`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`)}
+                              />
+                            </div>
+                          )}
+                          {kvkData.foto_muertes_iniciales_url && (
+                            <div>
+                              <p className="text-sm text-gray-500 mb-1">Muertes</p>
+                              <img
+                                src={`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`}
+                                alt="Muertes iniciales"
+                                className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => openImageModal(`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`)}
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
+                  )}
 
-                    {/* Kill Points finales */}
-                    <div className="bg-green-50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibold text-green-800 mb-3">Kill Points Actuales</h3>
-                      {Object.keys(batallas).length > 0 ? (
-                        <p className="text-2xl font-bold text-green-600">
-                          {formatNumber(Math.max(...Object.values(batallas).map(b => b.kill_points)))}
-                        </p>
-                      ) : (
-                        <p className="text-green-600">Sin batallas</p>
-                      )}
-                    </div>
-                  </div>
+                  {/* Batallas */}
+                  <div>
+                    <h4 className="font-semibold text-gray-800 mb-3">Batallas Registradas</h4>
+                    {batallas.length > 0 ? (
+                      <div className="space-y-4">
+                        {batallas.map((batalla) => (
+                          <div key={batalla.etapa_id} className="bg-gray-50 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h5 className="font-semibold text-gray-800">{batalla.nombre_etapa}</h5>
+                              <span className="text-sm text-gray-500">
+                                {formatDate(batalla.fecha_registro)}
+                              </span>
+                            </div>
 
-                  {/* Lista de batallas */}
-                  <div className="mt-8">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Historial de Batallas</h3>
-                    {Object.keys(batallas).length > 0 ? (
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Etapa</th>
-                              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Kill Points</th>
-                              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Kills T4</th>
-                              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Kills T5</th>
-                              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Muertes</th>
-                              <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Fecha</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {Object.values(batallas).map((batalla) => (
-                              <tr key={batalla.etapa_id} className="border-t hover:bg-gray-50">
-                                <td className="px-4 py-4 font-medium">{batalla.nombre_etapa}</td>
-                                <td className="px-4 py-4 text-center">{formatNumber(batalla.kill_points)}</td>
-                                <td className="px-4 py-4 text-center">{formatNumber(batalla.kill_t4 || 0)}</td>
-                                <td className="px-4 py-4 text-center">{formatNumber(batalla.kill_t5 || 0)}</td>
-                                <td className="px-4 py-4 text-center">{formatNumber(batalla.muertes_propias || 0)}</td>
-                                <td className="px-4 py-4 text-center">{formatDate(batalla.fecha_registro)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-3">
+                              <div>
+                                <p className="text-sm text-gray-500">Kill Points</p>
+                                <p className="font-semibold">{formatNumber(batalla.kill_points)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Kills T4</p>
+                                <p className="font-semibold">{formatNumber(batalla.kill_t4)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Kills T5</p>
+                                <p className="font-semibold">{formatNumber(batalla.kill_t5)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Muertes Propias T4</p>
+                                <p className="font-semibold">{formatNumber(batalla.muertes_propias_t4)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Muertes Propias T5</p>
+                                <p className="font-semibold">{formatNumber(batalla.muertes_propias_t5)}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex space-x-4">
+                              {batalla.foto_batalla_url && (
+                                <div>
+                                  <p className="text-sm text-gray-500 mb-1">Batalla</p>
+                                  <img
+                                    src={`http://localhost:8000/uploads/${batalla.foto_batalla_url}`}
+                                    alt="Foto batalla"
+                                    className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                                    onClick={() => openImageModal(`http://localhost:8000/uploads/${batalla.foto_batalla_url}`)}
+                                  />
+                                </div>
+                              )}
+                              {batalla.foto_muertes_url && (
+                                <div>
+                                  <p className="text-sm text-gray-500 mb-1">Muertes</p>
+                                  <img
+                                    src={`http://localhost:8000/uploads/${batalla.foto_muertes_url}`}
+                                    alt="Foto muertes"
+                                    className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                                    onClick={() => openImageModal(`http://localhost:8000/uploads/${batalla.foto_muertes_url}`)}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       <div className="text-center py-8">
@@ -703,7 +809,7 @@ const KvKPage = () => {
                           No hay batallas registradas
                         </h3>
                         <p className="text-gray-500">
-                          Comienza registrando tus batallas en la pestaña anterior
+                          Registra tus batallas en la pestaña "Batallas"
                         </p>
                       </div>
                     )}

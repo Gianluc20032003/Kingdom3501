@@ -83,31 +83,58 @@ try {
                 break;
                 
             case 'delete':
-                // Eliminar evento (solo si no tiene inscripciones)
+                // Eliminar evento (CASCADE eliminará las inscripciones automáticamente)
                 $eventId = $input['event_id'] ?? null;
                 
                 if (empty($eventId)) {
                     sendResponse(false, 'ID de evento requerido', null, 400);
                 }
                 
-                // Verificar si tiene inscripciones
+                // Obtener información del evento antes de eliminar
                 $stmt = $pdo->prepare("
-                    SELECT COUNT(*) as total 
-                    FROM aoo_inscripciones 
-                    WHERE aoo_config_id = ?
+                    SELECT 
+                        ac.horario,
+                        COUNT(ai.id) as total_inscritos
+                    FROM aoo_config ac
+                    LEFT JOIN aoo_inscripciones ai ON ac.id = ai.aoo_config_id
+                    WHERE ac.id = ?
+                    GROUP BY ac.id, ac.horario
                 ");
                 $stmt->execute([$eventId]);
-                $inscripciones = $stmt->fetch();
+                $eventoInfo = $stmt->fetch();
                 
-                if ($inscripciones['total'] > 0) {
-                    sendResponse(false, 'No se puede eliminar un evento con inscripciones', null, 400);
+                if (!$eventoInfo) {
+                    sendResponse(false, 'Evento no encontrado', null, 404);
                 }
                 
-                // Eliminar evento
+                // Si hay inscripciones, eliminar las fotos manualmente antes del CASCADE
+                if ($eventoInfo['total_inscritos'] > 0) {
+                    $stmt = $pdo->prepare("
+                        SELECT foto_comandantes_url 
+                        FROM aoo_inscripciones 
+                        WHERE aoo_config_id = ? AND foto_comandantes_url IS NOT NULL
+                    ");
+                    $stmt->execute([$eventId]);
+                    $fotos = $stmt->fetchAll();
+                    
+                    // Eliminar archivos de fotos del servidor
+                    foreach ($fotos as $foto) {
+                        $filePath = UPLOAD_DIR . $foto['foto_comandantes_url'];
+                        if (file_exists($filePath)) {
+                            unlink($filePath);
+                        }
+                    }
+                }
+                
+                // Eliminar el evento (CASCADE eliminará las inscripciones automáticamente)
                 $stmt = $pdo->prepare("DELETE FROM aoo_config WHERE id = ?");
                 $stmt->execute([$eventId]);
                 
-                sendResponse(true, 'Evento eliminado exitosamente');
+                $mensaje = $eventoInfo['total_inscritos'] > 0 
+                    ? "Evento '{$eventoInfo['horario']}' eliminado junto con {$eventoInfo['total_inscritos']} inscripciones"
+                    : "Evento '{$eventoInfo['horario']}' eliminado exitosamente";
+                    
+                sendResponse(true, $mensaje);
                 break;
                 
             default:

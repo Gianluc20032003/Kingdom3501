@@ -1,6 +1,6 @@
 <?php
 // kvk/save-battle.php
-// Guardar datos de batalla de KvK
+// Guardar datos de batalla en KvK
 
 require_once '../config/config.php';
 
@@ -11,28 +11,38 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $user = getAuthenticatedUser();
 
 // Validar entrada
-$rules = [
-    'etapa_id' => ['required' => true, 'type' => 'int'],
-    'kill_points' => ['required' => true, 'type' => 'int', 'min' => 0],
-    'kill_t4' => ['required' => false, 'type' => 'int', 'min' => 0],
-    'kill_t5' => ['required' => false, 'type' => 'int', 'min' => 0],
-    'muertes_propias' => ['required' => false, 'type' => 'int', 'min' => 0]
-];
+$etapaId = $_POST['etapa_id'] ?? null;
+$killPoints = $_POST['kill_points'] ?? null;
+$killT4 = $_POST['kill_t4'] ?? 0;
+$killT5 = $_POST['kill_t5'] ?? 0;
+$muertesPropiasT4 = $_POST['muertes_propias_t4'] ?? 0;
+$muertesPropiasT5 = $_POST['muertes_propias_t5'] ?? 0;
 
-$errors = validateInput($_POST, $rules);
-if (!empty($errors)) {
-    sendResponse(false, 'Datos inválidos', $errors, 400);
+// Validaciones
+if (empty($etapaId) || !is_numeric($etapaId)) {
+    sendResponse(false, 'Debe seleccionar una etapa válida', null, 400);
 }
 
-$etapaId = (int) $_POST['etapa_id'];
-$killPoints = (int) $_POST['kill_points'];
-$killT4 = (int) ($_POST['kill_t4'] ?? 0);
-$killT5 = (int) ($_POST['kill_t5'] ?? 0);
-$muertesPropias = (int) ($_POST['muertes_propias'] ?? 0);
+if (empty($killPoints) || !is_numeric($killPoints) || $killPoints < 0) {
+    sendResponse(false, 'Los Kill Points deben ser un número válido mayor o igual a 0', null, 400);
+}
+
+if (!is_numeric($muertesPropiasT4) || $muertesPropiasT4 < 0) {
+    sendResponse(false, 'Las muertes propias T4 deben ser un número válido mayor o igual a 0', null, 400);
+}
+if (!is_numeric($muertesPropiasT5) || $muertesPropiasT5 < 0) {
+    sendResponse(false, 'Las muertes propias T5 deben ser un número válido mayor o igual a 0', null, 400);
+}
+
+$killPoints = (int) $killPoints;
+$killT4 = (int) $killT4;
+$killT5 = (int) $killT5;
+$muertesPropiasT4 = (int) $muertesPropiasT4;
+$muertesPropiasT5 = (int) $muertesPropiasT5;
 
 try {
     $pdo = getDBConnection();
-    
+
     // Verificar que la etapa existe y está activa
     $stmt = $pdo->prepare("
         SELECT id, nombre_etapa 
@@ -41,12 +51,12 @@ try {
     ");
     $stmt->execute([$etapaId]);
     $etapa = $stmt->fetch();
-    
+
     if (!$etapa) {
-        sendResponse(false, 'La etapa especificada no existe o no está activa', null, 400);
+        sendResponse(false, 'La etapa seleccionada no existe o no está activa', null, 400);
     }
-    
-    // Verificar si ya existe un registro para esta etapa
+
+    // Verificar si ya existe un registro para este usuario y etapa
     $stmt = $pdo->prepare("
         SELECT id, foto_batalla_url, foto_muertes_url 
         FROM kvk_batallas 
@@ -54,15 +64,15 @@ try {
     ");
     $stmt->execute([$user->user_id, $etapaId]);
     $existingRecord = $stmt->fetch();
-    
+
     $fotoBatallaUrl = null;
     $fotoMuertesUrl = null;
-    
-    // Procesar imagen de batalla si se subió
+
+    // Procesar imagen de batalla
     if (isset($_FILES['foto_batalla']) && $_FILES['foto_batalla']['error'] === UPLOAD_ERR_OK) {
         try {
             $fotoBatallaUrl = uploadFile($_FILES['foto_batalla'], 'kvk');
-            
+
             // Eliminar foto anterior si existe
             if ($existingRecord && $existingRecord['foto_batalla_url']) {
                 $oldPhotoPath = UPLOAD_DIR . $existingRecord['foto_batalla_url'];
@@ -75,13 +85,15 @@ try {
         }
     } else if ($existingRecord) {
         $fotoBatallaUrl = $existingRecord['foto_batalla_url'];
+    } else {
+        sendResponse(false, 'La foto de batalla es requerida', null, 400);
     }
-    
-    // Procesar imagen de muertes si se subió
+
+    // Procesar imagen de muertes
     if (isset($_FILES['foto_muertes']) && $_FILES['foto_muertes']['error'] === UPLOAD_ERR_OK) {
         try {
             $fotoMuertesUrl = uploadFile($_FILES['foto_muertes'], 'kvk');
-            
+
             // Eliminar foto anterior si existe
             if ($existingRecord && $existingRecord['foto_muertes_url']) {
                 $oldPhotoPath = UPLOAD_DIR . $existingRecord['foto_muertes_url'];
@@ -94,47 +106,61 @@ try {
         }
     } else if ($existingRecord) {
         $fotoMuertesUrl = $existingRecord['foto_muertes_url'];
+    } else {
+        sendResponse(false, 'La foto de muertes es requerida', null, 400);
     }
-    
-    // Validar que tenga al menos una foto para nuevos registros
-    if (!$existingRecord && !$fotoBatallaUrl) {
-        sendResponse(false, 'La foto de batalla es requerida', null, 400);
-    }
-    
+
     if ($existingRecord) {
         // Actualizar registro existente
         $stmt = $pdo->prepare("
             UPDATE kvk_batallas 
-            SET kill_points = ?, kill_t4 = ?, kill_t5 = ?, muertes_propias = ?, 
+            SET kill_points = ?, kill_t4 = ?, kill_t5 = ?, 
+                muertes_propias_t4 = ?, muertes_propias_t5 = ?, 
                 foto_batalla_url = ?, foto_muertes_url = ?
             WHERE id = ?
         ");
         $stmt->execute([
-            $killPoints, $killT4, $killT5, $muertesPropias, 
-            $fotoBatallaUrl, $fotoMuertesUrl, $existingRecord['id']
+            $killPoints,
+            $killT4,
+            $killT5,
+            $muertesPropiasT4,
+            $muertesPropias_t5,
+            $fotoBatallaUrl,
+            $fotoMuertesUrl,
+            $existingRecord->id
         ]);
-        
+
         sendResponse(true, 'Datos de batalla actualizados exitosamente');
     } else {
         // Crear nuevo registro
         $stmt = $pdo->prepare("
-            INSERT INTO kvk_batallas 
-            (usuario_id, etapa_id, kill_points, kill_t4, kill_t5, muertes_propias, foto_batalla_url, foto_muertes_url)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO kvk_batallas (
+                usuario_id, etapa_id, kill_points, kill_t4, kill_t5, 
+                muertes_propias_t4,
+                muertes_propias_t5,
+                foto_batalla_url, foto_muertes_url
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
-            $user->user_id, $etapaId, $killPoints, $killT4, $killT5, 
-            $muertesPropias, $fotoBatallaUrl, $fotoMuertesUrl
+            $user->user_id,
+            $etapaId,
+            $killPoints,
+            $killT4,
+            $killT5,
+            $muertesPropiasT4,
+            $muertesPropiasT5,
+            $fotoBatallaUrl,
+            $fotoMuertesUrl
         ]);
-        
+
         sendResponse(true, 'Datos de batalla registrados exitosamente');
     }
-    
 } catch (PDOException $e) {
-    error_log('Error guardando datos de batalla KvK: ' . $e->getMessage());
+    error_log('Error guardando datos de batalla: ' . $e->getMessage());
     sendResponse(false, 'Error interno del servidor', null, 500);
 } catch (Exception $e) {
-    error_log('Error guardando datos de batalla KvK: ' . $e->getMessage());
+
+    error_log('Error guardando datos de batalla: ' . $e->getMessage());
     sendResponse(false, 'Error interno del servidor', null, 500);
 }
-?>

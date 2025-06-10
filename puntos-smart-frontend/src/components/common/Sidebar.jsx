@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { modulesAPI } from '../../services/api';
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { modulesAPI } from "../../services/api";
 import {
   HomeIcon,
   BuildingStorefrontIcon,
@@ -11,8 +11,8 @@ import {
   UsersIcon,
   CogIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
-} from '@heroicons/react/24/outline';
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 
 const Sidebar = () => {
   const { user } = useAuth();
@@ -31,61 +31,79 @@ const Sidebar = () => {
         setModuleConfigs(response.data.modules);
       }
     } catch (error) {
-      console.error('Error loading module configs:', error);
+      console.error("Error loading module configs:", error);
     }
   };
 
   const menuItems = [
     {
-      name: 'Inicio',
-      path: '/dashboard',
+      name: "Inicio",
+      path: "/dashboard",
       icon: HomeIcon,
-      enabled: true
+      enabled: true,
     },
     {
-      name: 'Fortalezas Bárbaras',
-      path: '/fortalezas',
+      name: "Fortalezas Bárbaras",
+      path: "/fortalezas",
       icon: BuildingStorefrontIcon,
       enabled: moduleConfigs.fortalezas_barbaras?.habilitado !== false,
-      key: 'fortalezas_barbaras'
+      key: "fortalezas_barbaras",
     },
     {
-      name: 'Movilización',
-      path: '/movilizacion',
+      name: "Movilización",
+      path: "/movilizacion",
       icon: ShoppingCartIcon,
       enabled: moduleConfigs.movilizacion?.habilitado !== false,
-      key: 'movilizacion'
+      key: "movilizacion",
     },
     {
-      name: 'KvK',
-      path: '/kvk',
+      name: "KvK",
+      path: "/kvk",
       icon: FireIcon,
       enabled: moduleConfigs.kvk?.habilitado !== false,
-      key: 'kvk'
+      key: "kvk",
     },
     {
-      name: 'MGE',
-      path: '/mge',
+      name: "MGE",
+      path: "/mge",
       icon: TrophyIcon,
       enabled: moduleConfigs.mge?.habilitado !== false,
-      key: 'mge'
+      key: "mge",
     },
     {
-      name: 'AOO',
-      path: '/aoo',
+      name: "AOO",
+      path: "/aoo",
       icon: UsersIcon,
       enabled: moduleConfigs.aoo?.habilitado !== false,
-      key: 'aoo'
-    }
+      key: "aoo",
+    },
   ];
 
   const adminItems = [
     {
-      name: 'Administración',
-      path: '/admin',
+      name: "Administración",
+      path: "/admin",
       icon: CogIcon,
-      enabled: user?.es_admin
-    }
+      enabled: user?.es_admin,
+    },
+    {
+      name: "Gestión AOO",
+      path: "/admin-aoo",
+      icon: CogIcon,
+      enabled: user?.es_admin,
+    },
+    {
+      name: "Gestión MGE",
+      path: "/admin-mge",
+      icon: CogIcon,
+      enabled: user?.es_admin,
+    },
+    {
+      name: "Gestión KvK",
+      path: "/admin-kvk",
+      icon: CogIcon,
+      enabled: user?.es_admin,
+    },
   ];
 
   const isActive = (path) => {
@@ -94,7 +112,7 @@ const Sidebar = () => {
 
   const MenuItem = ({ item }) => {
     const Icon = item.icon;
-    
+
     if (!item.enabled) return null;
 
     return (
@@ -102,27 +120,29 @@ const Sidebar = () => {
         to={item.path}
         className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
           isActive(item.path)
-            ? 'bg-purple-600 text-white'
-            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-        } ${collapsed ? 'justify-center' : ''}`}
+            ? "bg-purple-600 text-white"
+            : "text-gray-300 hover:bg-gray-700 hover:text-white"
+        } ${collapsed ? "justify-center" : ""}`}
       >
-        <Icon className={`h-5 w-5 ${collapsed ? '' : 'mr-3'}`} />
+        <Icon className={`h-5 w-5 ${collapsed ? "" : "mr-3"}`} />
         {!collapsed && <span>{item.name}</span>}
       </Link>
     );
   };
 
   return (
-    <div className={`bg-gradient-to-b from-gray-800 to-gray-900 text-white transition-all duration-300 ${
-      collapsed ? 'w-16' : 'w-64'
-    } min-h-screen shadow-xl`}>
+    <div
+      className={`bg-gradient-to-b from-gray-800 to-gray-900 text-white transition-all duration-300 ${
+        collapsed ? "w-16" : "w-64"
+      } min-h-screen shadow-xl`}
+    >
       {/* Header del sidebar */}
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           {!collapsed && (
             <div>
               <h2 className="text-lg font-semibold text-white">Reino 3501</h2>
-              <p className="text-xs text-gray-400">Puntos Smart</p>
+              <p className="text-xs text-gray-400">Kingdom Smart</p>
             </div>
           )}
           <button
@@ -166,7 +186,11 @@ const Sidebar = () => {
 
       {/* Usuario info en la parte inferior */}
       <div className="relative bottom-4 left-0 right-0 px-4">
-        <div className={`bg-gray-700 rounded-lg p-3 ${collapsed ? 'text-center' : ''}`}>
+        <div
+          className={`bg-gray-700 rounded-lg p-3 ${
+            collapsed ? "text-center" : ""
+          }`}
+        >
           {collapsed ? (
             <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center mx-auto">
               <span className="text-xs font-bold">
@@ -179,7 +203,7 @@ const Sidebar = () => {
                 {user?.nombre_usuario}
               </p>
               <p className="text-xs text-gray-400">
-                {user?.es_admin ? 'Administrador' : 'Usuario'}
+                {user?.es_admin ? "Administrador" : "Usuario"}
               </p>
             </div>
           )}

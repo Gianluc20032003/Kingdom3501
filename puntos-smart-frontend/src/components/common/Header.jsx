@@ -28,7 +28,7 @@ const Header = () => {
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Puntos Smart</h1>
+              <h1 className="text-xl font-bold text-gray-900">Kingdom Smart</h1>
               <p className="text-xs text-gray-500">Reino 3501</p>
             </div>
           </div>
