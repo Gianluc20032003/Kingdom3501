@@ -7,14 +7,14 @@ import { validateFile, createFormData } from "../../utils/helpers";
 import { kvkAPI } from "../../services/api";
 import { ButtonSpinner } from "../ui/LoadingSpinner";
 
-const InitialDataTab = ({ 
-  kvkData, 
-  initialForm, 
-  setInitialForm, 
-  saving, 
-  setSaving, 
+const InitialDataTab = ({
+  kvkData,
+  initialForm,
+  setInitialForm,
+  saving,
+  setSaving,
   onDataSaved,
-  onImageClick 
+  onImageClick,
 }) => {
   const { t } = useTranslation();
   const { showAlert } = useAlert();
@@ -77,14 +77,14 @@ const InitialDataTab = ({
 
       const submitData = createFormData(
         {
-          initial_t4_kills: initialForm.initial_t4_kills,
-          initial_t5_kills: initialForm.initial_t5_kills,
-          initial_own_deaths: initialForm.initial_own_deaths,
-          current_power: initialForm.current_power, // NUEVO CAMPO
-          initial_kills_photo: initialForm.initial_kills_photo,
-          initial_deaths_photo: initialForm.initial_deaths_photo,
+          kill_t4_iniciales: initialForm.initial_t4_kills,
+          kill_t5_iniciales: initialForm.initial_t5_kills,
+          muertes_propias_iniciales: initialForm.initial_own_deaths,
+          current_power: initialForm.current_power,
+          foto_inicial: initialForm.initial_kills_photo,
+          foto_muertes_iniciales: initialForm.initial_deaths_photo,
         },
-        ["initial_kills_photo", "initial_deaths_photo"]
+        ["foto_inicial", "foto_muertes_iniciales"]
       );
 
       const response = await kvkAPI.saveInitial(submitData);
@@ -137,7 +137,11 @@ const InitialDataTab = ({
                   src="https://servicios.puntossmart.com/img/illsexample.jpg"
                   alt={t("kvk.initialKillsPhoto")}
                   className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => onImageClick("https://servicios.puntossmart.com/img/illsexample.jpg")}
+                  onClick={() =>
+                    onImageClick(
+                      "https://servicios.puntossmart.com/img/illsexample.jpg"
+                    )
+                  }
                 />
               </div>
 
@@ -150,7 +154,11 @@ const InitialDataTab = ({
                     src={`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`}
                     alt={t("kvk.initialKillsPhoto")}
                     className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => onImageClick(`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`)}
+                    onClick={() =>
+                      onImageClick(
+                        `http://localhost:8000/uploads/${kvkData.foto_inicial_url}`
+                      )
+                    }
                   />
                 </div>
               )}
@@ -182,7 +190,11 @@ const InitialDataTab = ({
                   src="https://servicios.puntossmart.com/img/eathexample.jpg"
                   alt={t("kvk.ownDeathsPhoto")}
                   className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => onImageClick("https://servicios.puntossmart.com/img/eathexample.jpg")}
+                  onClick={() =>
+                    onImageClick(
+                      "https://servicios.puntossmart.com/img/eathexample.jpg"
+                    )
+                  }
                 />
               </div>
 
@@ -195,7 +207,11 @@ const InitialDataTab = ({
                     src={`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`}
                     alt={t("kvk.ownDeathsPhoto")}
                     className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => onImageClick(`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`)}
+                    onClick={() =>
+                      onImageClick(
+                        `http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`
+                      )
+                    }
                   />
                 </div>
               )}
@@ -306,4 +322,4 @@ const InitialDataTab = ({
   );
 };
 
-export default InitialDataTab
+export default InitialDataTab;

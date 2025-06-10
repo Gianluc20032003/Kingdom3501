@@ -76,22 +76,34 @@ try {
         $batallas = $stmt->fetchAll();
     }
 
-    // Obtener puntuación del usuario usando la vista
+    // Reemplazar la vista con una consulta directa para calcular la puntuación
     $stmt = $pdo->prepare("
         SELECT 
-            honor_cantidad,
-            total_kill_t4_batallas,
-            total_kill_t5_batallas,
-            total_muertes_t4_batallas,
-            total_muertes_t5_batallas,
-            puntos_honor,
-            puntos_kill_t4,
-            puntos_kill_t5,
-            puntos_muertes_t4,
-            puntos_muertes_t5,
-            puntuacion_total
-        FROM vw_puntuacion_usuarios 
-        WHERE usuario_id = ?
+            COALESCE(kh.honor_cantidad, 0) AS honor_cantidad,
+            COALESCE(SUM(kb.kill_t4), 0) AS total_kill_t4_batallas,
+            COALESCE(SUM(kb.kill_t5), 0) AS total_kill_t5_batallas,
+            COALESCE(SUM(kb.muertes_propias_t4), 0) AS total_muertes_t4_batallas,
+            COALESCE(SUM(kb.muertes_propias_t5), 0) AS total_muertes_t5_batallas,
+            COALESCE(kh.honor_cantidad, 0) * 5 AS puntos_honor,
+            COALESCE(SUM(kb.kill_t4), 0) * 10 AS puntos_kill_t4,
+            COALESCE(SUM(kb.kill_t5), 0) * 20 AS puntos_kill_t5,
+            COALESCE(SUM(kb.muertes_propias_t4), 0) * 5 AS puntos_muertes_t4,
+            COALESCE(SUM(kb.muertes_propias_t5), 0) * 10 AS puntos_muertes_t5,
+            COALESCE(kh.honor_cantidad, 0) * 5 + 
+            COALESCE(SUM(kb.kill_t4), 0) * 10 + 
+            COALESCE(SUM(kb.kill_t5), 0) * 20 + 
+            COALESCE(SUM(kb.muertes_propias_t4), 0) * 5 + 
+            COALESCE(SUM(kb.muertes_propias_t5), 0) * 10 AS puntuacion_total
+        FROM 
+            (`usuarios` u 
+            LEFT JOIN `kvk_datos` kd ON u.id = kd.usuario_id) 
+            LEFT JOIN `kvk_honor` kh ON u.id = kh.usuario_id 
+            LEFT JOIN `kvk_batallas` kb ON u.id = kb.usuario_id 
+        WHERE 
+            u.id = ? AND u.es_admin = 0 
+        GROUP BY 
+            u.id, u.nombre_usuario, kd.kill_t4_iniciales, kd.kill_t5_iniciales, 
+            kd.muertes_propias_iniciales, kh.honor_cantidad
     ");
     $stmt->execute([$user->user_id]);
     $puntuacion = $stmt->fetch();

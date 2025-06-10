@@ -25,32 +25,43 @@ try {
                 kd.current_power,
                 kd.foto_inicial_url,
                 kd.foto_muertes_iniciales_url,
-                kd.fecha_registro as fecha_inicial,
+                kd.fecha_registro AS fecha_inicial,
                 
                 -- Honor
                 kh.honor_cantidad,
                 kh.foto_honor_url,
-                kh.fecha_registro as fecha_honor,
+                kh.fecha_registro AS fecha_honor,
                 
-                -- Puntuación desde la vista (USANDO COALESCE PARA NULLS)
-                COALESCE(vp.total_kill_t4_batallas, 0) as total_kill_t4_batallas,
-                COALESCE(vp.total_kill_t5_batallas, 0) as total_kill_t5_batallas,
-                COALESCE(vp.total_muertes_t4_batallas, 0) as total_muertes_t4_batallas,
-                COALESCE(vp.total_muertes_t5_batallas, 0) as total_muertes_t5_batallas,
-                COALESCE(vp.puntos_honor, 0) as puntos_honor,
-                COALESCE(vp.puntos_kill_t4, 0) as puntos_kill_t4,
-                COALESCE(vp.puntos_kill_t5, 0) as puntos_kill_t5,
-                COALESCE(vp.puntos_muertes_t4, 0) as puntos_muertes_t4,
-                COALESCE(vp.puntos_muertes_t5, 0) as puntos_muertes_t5,
-                COALESCE(vp.puntuacion_total, 0) as puntuacion_total,
-                COALESCE(vp.honor_cantidad, 0) as honor_cantidad_vp
+                -- Puntuación calculada directamente (reemplaza vw_puntuacion_usuarios)
+                COALESCE(SUM(kb.kill_t4), 0) AS total_kill_t4_batallas,
+                COALESCE(SUM(kb.kill_t5), 0) AS total_kill_t5_batallas,
+                COALESCE(SUM(kb.muertes_propias_t4), 0) AS total_muertes_t4_batallas,
+                COALESCE(SUM(kb.muertes_propias_t5), 0) AS total_muertes_t5_batallas,
+                COALESCE(kh.honor_cantidad, 0) * 5 AS puntos_honor,
+                COALESCE(SUM(kb.kill_t4), 0) * 10 AS puntos_kill_t4,
+                COALESCE(SUM(kb.kill_t5), 0) * 20 AS puntos_kill_t5,
+                COALESCE(SUM(kb.muertes_propias_t4), 0) * 5 AS puntos_muertes_t4,
+                COALESCE(SUM(kb.muertes_propias_t5), 0) * 10 AS puntos_muertes_t5,
+                COALESCE(kh.honor_cantidad, 0) * 5 + 
+                COALESCE(SUM(kb.kill_t4), 0) * 10 + 
+                COALESCE(SUM(kb.kill_t5), 0) * 20 + 
+                COALESCE(SUM(kb.muertes_propias_t4), 0) * 5 + 
+                COALESCE(SUM(kb.muertes_propias_t5), 0) * 10 AS puntuacion_total,
+                COALESCE(kh.honor_cantidad, 0) AS honor_cantidad_vp
                 
             FROM usuarios u
             LEFT JOIN kvk_datos kd ON u.id = kd.usuario_id
             LEFT JOIN kvk_honor kh ON u.id = kh.usuario_id
-            LEFT JOIN vw_puntuacion_usuarios vp ON u.id = vp.usuario_id
+            LEFT JOIN kvk_batallas kb ON u.id = kb.usuario_id
             WHERE u.es_admin = 0
-            ORDER BY COALESCE(vp.puntuacion_total, 0) DESC, u.nombre_usuario ASC
+            GROUP BY u.id, u.nombre_usuario, kd.kill_t4_iniciales, kd.kill_t5_iniciales, 
+                     kd.muertes_propias_iniciales, kh.honor_cantidad
+            ORDER BY COALESCE(
+                COALESCE(kh.honor_cantidad, 0) * 5 + 
+                COALESCE(SUM(kb.kill_t4), 0) * 10 + 
+                COALESCE(SUM(kb.kill_t5), 0) * 20 + 
+                COALESCE(SUM(kb.muertes_propias_t4), 0) * 5 + 
+                COALESCE(SUM(kb.muertes_propias_t5), 0) * 10, 0) DESC, u.nombre_usuario ASC
         ");
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -118,25 +129,36 @@ try {
         // Obtener ranking simplificado para tabla principal - CORREGIDO
         $stmt = $pdo->query("
             SELECT 
-                COALESCE(vpu.usuario_id, u.id) as usuario_id,
+                u.id AS usuario_id,
                 u.nombre_usuario,
-                COALESCE(vpu.honor_cantidad, 0) as honor_cantidad,
-                COALESCE(vpu.total_kill_t4_batallas, 0) as total_kill_t4_batallas,
-                COALESCE(vpu.total_kill_t5_batallas, 0) as total_kill_t5_batallas,
-                COALESCE(vpu.total_muertes_t4_batallas, 0) as total_muertes_t4_batallas,
-                COALESCE(vpu.total_muertes_t5_batallas, 0) as total_muertes_t5_batallas,
-                COALESCE(vpu.puntos_honor, 0) as puntos_honor,
-                COALESCE(vpu.puntos_kill_t4, 0) as puntos_kill_t4,
-                COALESCE(vpu.puntos_kill_t5, 0) as puntos_kill_t5,
-                COALESCE(vpu.puntos_muertes_t4, 0) as puntos_muertes_t4,
-                COALESCE(vpu.puntos_muertes_t5, 0) as puntos_muertes_t5,
-                COALESCE(vpu.puntuacion_total, 0) as puntuacion_total,
-                COALESCE(kd.current_power, 0) as current_power
+                COALESCE(kh.honor_cantidad, 0) AS honor_cantidad,
+                COALESCE(SUM(kb.kill_t4), 0) AS total_kill_t4_batallas,
+                COALESCE(SUM(kb.kill_t5), 0) AS total_kill_t5_batallas,
+                COALESCE(SUM(kb.muertes_propias_t4), 0) AS total_muertes_t4_batallas,
+                COALESCE(SUM(kb.muertes_propias_t5), 0) AS total_muertes_t5_batallas,
+                COALESCE(kh.honor_cantidad, 0) * 5 AS puntos_honor,
+                COALESCE(SUM(kb.kill_t4), 0) * 10 AS puntos_kill_t4,
+                COALESCE(SUM(kb.kill_t5), 0) * 20 AS puntos_kill_t5,
+                COALESCE(SUM(kb.muertes_propias_t4), 0) * 5 AS puntos_muertes_t4,
+                COALESCE(SUM(kb.muertes_propias_t5), 0) * 10 AS puntos_muertes_t5,
+                COALESCE(kh.honor_cantidad, 0) * 5 + 
+                COALESCE(SUM(kb.kill_t4), 0) * 10 + 
+                COALESCE(SUM(kb.kill_t5), 0) * 20 + 
+                COALESCE(SUM(kb.muertes_propias_t4), 0) * 5 + 
+                COALESCE(SUM(kb.muertes_propias_t5), 0) * 10 AS puntuacion_total,
+                COALESCE(kd.current_power, 0) AS current_power
             FROM usuarios u
-            LEFT JOIN vw_puntuacion_usuarios vpu ON u.id = vpu.usuario_id
             LEFT JOIN kvk_datos kd ON u.id = kd.usuario_id
+            LEFT JOIN kvk_honor kh ON u.id = kh.usuario_id
+            LEFT JOIN kvk_batallas kb ON u.id = kb.usuario_id
             WHERE u.es_admin = 0
-            ORDER BY COALESCE(vpu.puntuacion_total, 0) DESC, u.nombre_usuario ASC
+            GROUP BY u.id, u.nombre_usuario, kd.current_power, kh.honor_cantidad
+            ORDER BY COALESCE(
+                COALESCE(kh.honor_cantidad, 0) * 5 + 
+                COALESCE(SUM(kb.kill_t4), 0) * 10 + 
+                COALESCE(SUM(kb.kill_t5), 0) * 20 + 
+                COALESCE(SUM(kb.muertes_propias_t4), 0) * 5 + 
+                COALESCE(SUM(kb.muertes_propias_t5), 0) * 10, 0) DESC, u.nombre_usuario ASC
         ");
         $ranking = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -297,7 +319,6 @@ try {
             if (!$etapa) {
                 sendResponse(false, 'La etapa no existe', null, 404);
             }
-
 
             try {
                 // Contar batallas antes de eliminar (solo para informar al usuario)
