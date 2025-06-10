@@ -84,27 +84,21 @@ const Sidebar = () => {
 
   const adminItems = [
     {
-      name: t("nav.admin"),
-      path: "/admin",
-      icon: CogIcon,
-      enabled: user?.es_admin,
-    },
-    {
       name: t("nav.adminAoo"),
       path: "/admin-aoo",
-      icon: CogIcon,
+      icon: UsersIcon, 
       enabled: user?.es_admin,
     },
     {
       name: t("nav.adminMge"),
       path: "/admin-mge",
-      icon: CogIcon,
+      icon: FireIcon,
       enabled: user?.es_admin,
     },
     {
       name: t("nav.adminKvk"),
       path: "/admin-kvk",
-      icon: CogIcon,
+      icon: TrophyIcon,
       enabled: user?.es_admin,
     },
   ];
@@ -136,7 +130,7 @@ const Sidebar = () => {
   return (
     <div
       className={`bg-gradient-to-b from-gray-800 to-gray-900 text-white transition-all duration-300 ${
-        collapsed ? "w-16" : "w-64"
+        collapsed ? "w-20" : "w-64"
       } min-h-screen shadow-xl`}
     >
       {/* Header del sidebar */}
@@ -174,7 +168,7 @@ const Sidebar = () => {
           <div className="px-4">
             <div className="border-t border-gray-700"></div>
           </div>
-          <nav className="p-4 space-y-1">
+          <nav className="p-4 space-y-1 mb-4">
             {!collapsed && (
               <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                 {t("nav.admin")}
