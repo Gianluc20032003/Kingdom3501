@@ -1,6 +1,6 @@
 <?php
 // kvk/save-battle.php
-// Guardar datos de batalla en KvK
+// Guardar datos de batalla en KvK (CORREGIDO PARA FRONTEND MODULARIZADO)
 
 require_once '../config/config.php';
 
@@ -10,12 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $user = getAuthenticatedUser();
 
-// Validar entrada
+// Validar entrada - NOMBRES ACTUALIZADOS PARA COINCIDIR CON FRONTEND
 $etapaId = $_POST['etapa_id'] ?? null;
 $killT4 = $_POST['kill_t4'] ?? 0;
 $killT5 = $_POST['kill_t5'] ?? 0;
-$muertesPropiasT4 = $_POST['muertes_propias_t4'] ?? 0;
-$muertesPropiasT5 = $_POST['muertes_propias_t5'] ?? 0;
+$muertesPropiasT4 = $_POST['own_deaths_t4'] ?? 0;  // CAMBIADO: own_deaths_t4
+$muertesPropiasT5 = $_POST['own_deaths_t5'] ?? 0;  // CAMBIADO: own_deaths_t5
 
 // Validaciones
 if (empty($etapaId) || !is_numeric($etapaId)) {
@@ -62,10 +62,10 @@ try {
     $fotoBatallaUrl = null;
     $fotoMuertesUrl = null;
 
-    // Procesar imagen de batalla
-    if (isset($_FILES['foto_batalla']) && $_FILES['foto_batalla']['error'] === UPLOAD_ERR_OK) {
+    // Procesar imagen de batalla - NOMBRE CAMBIADO: battle_photo
+    if (isset($_FILES['battle_photo']) && $_FILES['battle_photo']['error'] === UPLOAD_ERR_OK) {
         try {
-            $fotoBatallaUrl = uploadFile($_FILES['foto_batalla'], 'kvk');
+            $fotoBatallaUrl = uploadFile($_FILES['battle_photo'], 'kvk');
 
             // Eliminar foto anterior si existe
             if ($existingRecord && $existingRecord['foto_batalla_url']) {
@@ -83,10 +83,10 @@ try {
         sendResponse(false, 'La foto de batalla es requerida', null, 400);
     }
 
-    // Procesar imagen de muertes
-    if (isset($_FILES['foto_muertes']) && $_FILES['foto_muertes']['error'] === UPLOAD_ERR_OK) {
+    // Procesar imagen de muertes - NOMBRE CAMBIADO: deaths_photo
+    if (isset($_FILES['deaths_photo']) && $_FILES['deaths_photo']['error'] === UPLOAD_ERR_OK) {
         try {
-            $fotoMuertesUrl = uploadFile($_FILES['foto_muertes'], 'kvk');
+            $fotoMuertesUrl = uploadFile($_FILES['deaths_photo'], 'kvk');
 
             // Eliminar foto anterior si existe
             if ($existingRecord && $existingRecord['foto_muertes_url']) {
@@ -154,3 +154,4 @@ try {
     error_log('Error guardando datos de batalla: ' . $e->getMessage());
     sendResponse(false, 'Error interno del servidor', null, 500);
 }
+?>

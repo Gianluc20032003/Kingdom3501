@@ -1,6 +1,6 @@
 <?php
 // kvk/save-initial.php
-// Guardar Kill T4/T5 iniciales antes del KvK (ACTUALIZADO)
+// Guardar Kill T4/T5 iniciales antes del KvK + Poder Actual (ACTUALIZADO)
 
 require_once '../config/config.php';
 
@@ -10,10 +10,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $user = getAuthenticatedUser();
 
-// Validar entrada
+// Validar entrada - NOMBRES ACTUALIZADOS PARA COINCIDIR CON FRONTEND
 $killT4Iniciales = $_POST['kill_t4_iniciales'] ?? null;
 $killT5Iniciales = $_POST['kill_t5_iniciales'] ?? null;
 $muertesPropiasIniciales = $_POST['muertes_propias_iniciales'] ?? null;
+$currentPower = $_POST['current_power'] ?? null; // NUEVO CAMPO
 
 if (empty($killT4Iniciales) || !is_numeric($killT4Iniciales) || $killT4Iniciales < 0) {
     sendResponse(false, 'Los Kill T4 iniciales deben ser un número válido mayor o igual a 0', null, 400);
@@ -24,10 +25,15 @@ if (empty($killT5Iniciales) || !is_numeric($killT5Iniciales) || $killT5Iniciales
 if (empty($muertesPropiasIniciales) || !is_numeric($muertesPropiasIniciales) || $muertesPropiasIniciales < 0) {
     sendResponse(false, 'Las muertes propias iniciales deben ser un número válido mayor o igual a 0', null, 400);
 }
+// NUEVA VALIDACIÓN PARA PODER ACTUAL
+if (empty($currentPower) || !is_numeric($currentPower) || $currentPower < 0) {
+    sendResponse(false, 'El poder actual debe ser un número válido mayor o igual a 0', null, 400);
+}
 
 $killT4Iniciales = (int) $killT4Iniciales;
 $killT5Iniciales = (int) $killT5Iniciales;
 $muertesPropiasIniciales = (int) $muertesPropiasIniciales;
+$currentPower = (int) $currentPower; // NUEVO CAMPO
 
 try {
     $pdo = getDBConnection();
@@ -44,7 +50,6 @@ try {
     $fotoInicialUrl = null;
     $fotoMuertesInicialesUrl = null;
     
-    // Procesar imagen de kills iniciales
     if (isset($_FILES['foto_inicial']) && $_FILES['foto_inicial']['error'] === UPLOAD_ERR_OK) {
         try {
             $fotoInicialUrl = uploadFile($_FILES['foto_inicial'], 'kvk');
@@ -65,7 +70,7 @@ try {
         sendResponse(false, 'La foto de kills iniciales es requerida para el registro inicial', null, 400);
     }
     
-    // Procesar imagen de muertes iniciales
+    // Procesar imagen de muertes iniciales - NOMBRE ACTUALIZADO
     if (isset($_FILES['foto_muertes_iniciales']) && $_FILES['foto_muertes_iniciales']['error'] === UPLOAD_ERR_OK) {
         try {
             $fotoMuertesInicialesUrl = uploadFile($_FILES['foto_muertes_iniciales'], 'kvk');
@@ -87,31 +92,31 @@ try {
     }
     
     if ($existingRecord) {
-        // Actualizar registro existente
+        // Actualizar registro existente - AGREGAR CURRENT_POWER
         $stmt = $pdo->prepare("
             UPDATE kvk_datos 
             SET kill_t4_iniciales = ?, kill_t5_iniciales = ?, muertes_propias_iniciales = ?, 
-                foto_inicial_url = ?, foto_muertes_iniciales_url = ?
+                current_power = ?, foto_inicial_url = ?, foto_muertes_iniciales_url = ?
             WHERE id = ?
         ");
         $stmt->execute([
             $killT4Iniciales, $killT5Iniciales, $muertesPropiasIniciales, 
-            $fotoInicialUrl, $fotoMuertesInicialesUrl, $existingRecord['id']
+            $currentPower, $fotoInicialUrl, $fotoMuertesInicialesUrl, $existingRecord['id']
         ]);
         
         sendResponse(true, 'Datos iniciales actualizados exitosamente');
     } else {
-        // Crear nuevo registro
+        // Crear nuevo registro - AGREGAR CURRENT_POWER
         $stmt = $pdo->prepare("
             INSERT INTO kvk_datos (
                 usuario_id, kill_t4_iniciales, kill_t5_iniciales, muertes_propias_iniciales, 
-                foto_inicial_url, foto_muertes_iniciales_url
+                current_power, foto_inicial_url, foto_muertes_iniciales_url
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $user->user_id, $killT4Iniciales, $killT5Iniciales, $muertesPropiasIniciales, 
-            $fotoInicialUrl, $fotoMuertesInicialesUrl
+            $currentPower, $fotoInicialUrl, $fotoMuertesInicialesUrl
         ]);
         
         sendResponse(true, 'Datos iniciales registrados exitosamente');

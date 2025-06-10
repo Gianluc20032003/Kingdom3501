@@ -1,6 +1,5 @@
 <?php
-// admin/kvk-etapas.php - ACTUALIZADO CON PUNTUACIÓN
-// Gestión de etapas de KvK y datos de usuarios con sistema de puntuación
+// admin/kvk-etapas.php - CORREGIDO Error 500
 
 require_once '../config/config.php';
 
@@ -13,16 +12,17 @@ try {
     $pdo = getDBConnection();
 
     if ($method === 'GET' && $type === 'user_data') {
-        // Obtener datos completos de usuarios con puntuación
+        // Obtener datos completos de usuarios con puntuación - CORREGIDO
         $stmt = $pdo->query("
             SELECT 
                 u.id,
                 u.nombre_usuario,
                 
-                -- Datos iniciales
+                -- Datos iniciales (CON CURRENT_POWER)
                 kd.kill_t4_iniciales,
                 kd.kill_t5_iniciales,
                 kd.muertes_propias_iniciales,
+                kd.current_power,
                 kd.foto_inicial_url,
                 kd.foto_muertes_iniciales_url,
                 kd.fecha_registro as fecha_inicial,
@@ -32,72 +32,79 @@ try {
                 kh.foto_honor_url,
                 kh.fecha_registro as fecha_honor,
                 
-                -- Puntuación desde la vista
-                vp.total_kill_t4_batallas,
-                vp.total_kill_t5_batallas,
-                vp.total_muertes_t4_batallas,
-                vp.total_muertes_t5_batallas,
-                vp.puntos_honor,
-                vp.puntos_kill_t4,
-                vp.puntos_kill_t5,
-                vp.puntos_muertes_t4,
-                vp.puntos_muertes_t5,
-                vp.puntuacion_total
+                -- Puntuación desde la vista (USANDO COALESCE PARA NULLS)
+                COALESCE(vp.total_kill_t4_batallas, 0) as total_kill_t4_batallas,
+                COALESCE(vp.total_kill_t5_batallas, 0) as total_kill_t5_batallas,
+                COALESCE(vp.total_muertes_t4_batallas, 0) as total_muertes_t4_batallas,
+                COALESCE(vp.total_muertes_t5_batallas, 0) as total_muertes_t5_batallas,
+                COALESCE(vp.puntos_honor, 0) as puntos_honor,
+                COALESCE(vp.puntos_kill_t4, 0) as puntos_kill_t4,
+                COALESCE(vp.puntos_kill_t5, 0) as puntos_kill_t5,
+                COALESCE(vp.puntos_muertes_t4, 0) as puntos_muertes_t4,
+                COALESCE(vp.puntos_muertes_t5, 0) as puntos_muertes_t5,
+                COALESCE(vp.puntuacion_total, 0) as puntuacion_total,
+                COALESCE(vp.honor_cantidad, 0) as honor_cantidad_vp
                 
             FROM usuarios u
             LEFT JOIN kvk_datos kd ON u.id = kd.usuario_id
             LEFT JOIN kvk_honor kh ON u.id = kh.usuario_id
             LEFT JOIN vw_puntuacion_usuarios vp ON u.id = vp.usuario_id
             WHERE u.es_admin = 0
-            ORDER BY vp.puntuacion_total DESC NULLS LAST, u.nombre_usuario ASC
+            ORDER BY COALESCE(vp.puntuacion_total, 0) DESC, u.nombre_usuario ASC
         ");
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $userData = [];
         foreach ($users as $u) {
-            // Fetch battle data
-            $stmt = $pdo->prepare("
-                SELECT 
-                    kb.etapa_id, kb.kill_points, kb.kill_t4, kb.kill_t5,
-                    kb.muertes_propias_t4, kb.muertes_propias_t5,
-                    kb.foto_batalla_url, kb.foto_muertes_url, kb.fecha_registro,
-                    ke.nombre_etapa, ke.orden_etapa
-                FROM kvk_batallas kb
-                INNER JOIN kvk_etapas ke ON kb.etapa_id = ke.id
-                WHERE kb.usuario_id = ?
-                ORDER BY ke.orden_etapa ASC
-            ");
-            $stmt->execute([$u['id']]);
-            $batallas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Fetch battle data con manejo de errores
+            try {
+                $stmt = $pdo->prepare("
+                    SELECT 
+                        kb.etapa_id, kb.kill_points, kb.kill_t4, kb.kill_t5,
+                        kb.muertes_propias_t4, kb.muertes_propias_t5,
+                        kb.foto_batalla_url, kb.foto_muertes_url, kb.fecha_registro,
+                        ke.nombre_etapa, ke.orden_etapa
+                    FROM kvk_batallas kb
+                    INNER JOIN kvk_etapas ke ON kb.etapa_id = ke.id
+                    WHERE kb.usuario_id = ?
+                    ORDER BY ke.orden_etapa ASC
+                ");
+                $stmt->execute([$u['id']]);
+                $batallas = $stmt->fetchAll(PDO::FETCH_ASSOC) ?? [];
+            } catch (Exception $e) {
+                error_log("Error obteniendo batallas para usuario {$u['id']}: " . $e->getMessage());
+                $batallas = [];
+            }
 
             $userData[] = [
                 'id' => $u['id'],
                 'nombre_usuario' => $u['nombre_usuario'],
                 'initial' => [
-                    'kill_t4_iniciales' => $u['kill_t4_iniciales'],
-                    'kill_t5_iniciales' => $u['kill_t5_iniciales'],
-                    'muertes_propias_iniciales' => $u['muertes_propias_iniciales'],
+                    'kill_t4_iniciales' => $u['kill_t4_iniciales'] ?? 0,
+                    'kill_t5_iniciales' => $u['kill_t5_iniciales'] ?? 0,
+                    'muertes_propias_iniciales' => $u['muertes_propias_iniciales'] ?? 0,
+                    'current_power' => $u['current_power'] ?? 0,
                     'foto_inicial_url' => $u['foto_inicial_url'],
                     'foto_muertes_iniciales_url' => $u['foto_muertes_iniciales_url'],
                     'fecha_registro' => $u['fecha_inicial']
                 ],
                 'honor' => [
-                    'honor_cantidad' => $u['honor_cantidad'],
+                    'honor_cantidad' => $u['honor_cantidad'] ?? 0,
                     'foto_honor_url' => $u['foto_honor_url'],
                     'fecha_registro' => $u['fecha_honor']
                 ],
                 'puntuacion' => [
-                    'honor_cantidad' => $u['honor_cantidad'] ?? 0,
-                    'total_kill_t4_batallas' => $u['total_kill_t4_batallas'] ?? 0,
-                    'total_kill_t5_batallas' => $u['total_kill_t5_batallas'] ?? 0,
-                    'total_muertes_t4_batallas' => $u['total_muertes_t4_batallas'] ?? 0,
-                    'total_muertes_t5_batallas' => $u['total_muertes_t5_batallas'] ?? 0,
-                    'puntos_honor' => $u['puntos_honor'] ?? 0,
-                    'puntos_kill_t4' => $u['puntos_kill_t4'] ?? 0,
-                    'puntos_kill_t5' => $u['puntos_kill_t5'] ?? 0,
-                    'puntos_muertes_t4' => $u['puntos_muertes_t4'] ?? 0,
-                    'puntos_muertes_t5' => $u['puntos_muertes_t5'] ?? 0,
-                    'puntuacion_total' => $u['puntuacion_total'] ?? 0
+                    'honor_cantidad' => $u['honor_cantidad_vp'],
+                    'total_kill_t4_batallas' => $u['total_kill_t4_batallas'],
+                    'total_kill_t5_batallas' => $u['total_kill_t5_batallas'],
+                    'total_muertes_t4_batallas' => $u['total_muertes_t4_batallas'],
+                    'total_muertes_t5_batallas' => $u['total_muertes_t5_batallas'],
+                    'puntos_honor' => $u['puntos_honor'],
+                    'puntos_kill_t4' => $u['puntos_kill_t4'],
+                    'puntos_kill_t5' => $u['puntos_kill_t5'],
+                    'puntos_muertes_t4' => $u['puntos_muertes_t4'],
+                    'puntos_muertes_t5' => $u['puntos_muertes_t5'],
+                    'puntuacion_total' => $u['puntuacion_total']
                 ],
                 'batallas' => $batallas
             ];
@@ -108,24 +115,28 @@ try {
     }
 
     if ($method === 'GET' && $type === 'ranking') {
-        // Obtener ranking simplificado para tabla principal
+        // Obtener ranking simplificado para tabla principal - CORREGIDO
         $stmt = $pdo->query("
             SELECT 
-                usuario_id,
-                nombre_usuario,
-                honor_cantidad,
-                total_kill_t4_batallas,
-                total_kill_t5_batallas,
-                total_muertes_t4_batallas,
-                total_muertes_t5_batallas,
-                puntos_honor,
-                puntos_kill_t4,
-                puntos_kill_t5,
-                puntos_muertes_t4,
-                puntos_muertes_t5,
-                puntuacion_total
-            FROM vw_puntuacion_usuarios
-            ORDER BY puntuacion_total DESC
+                COALESCE(vpu.usuario_id, u.id) as usuario_id,
+                u.nombre_usuario,
+                COALESCE(vpu.honor_cantidad, 0) as honor_cantidad,
+                COALESCE(vpu.total_kill_t4_batallas, 0) as total_kill_t4_batallas,
+                COALESCE(vpu.total_kill_t5_batallas, 0) as total_kill_t5_batallas,
+                COALESCE(vpu.total_muertes_t4_batallas, 0) as total_muertes_t4_batallas,
+                COALESCE(vpu.total_muertes_t5_batallas, 0) as total_muertes_t5_batallas,
+                COALESCE(vpu.puntos_honor, 0) as puntos_honor,
+                COALESCE(vpu.puntos_kill_t4, 0) as puntos_kill_t4,
+                COALESCE(vpu.puntos_kill_t5, 0) as puntos_kill_t5,
+                COALESCE(vpu.puntos_muertes_t4, 0) as puntos_muertes_t4,
+                COALESCE(vpu.puntos_muertes_t5, 0) as puntos_muertes_t5,
+                COALESCE(vpu.puntuacion_total, 0) as puntuacion_total,
+                COALESCE(kd.current_power, 0) as current_power
+            FROM usuarios u
+            LEFT JOIN vw_puntuacion_usuarios vpu ON u.id = vpu.usuario_id
+            LEFT JOIN kvk_datos kd ON u.id = kd.usuario_id
+            WHERE u.es_admin = 0
+            ORDER BY COALESCE(vpu.puntuacion_total, 0) DESC, u.nombre_usuario ASC
         ");
         $ranking = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -266,9 +277,8 @@ try {
     }
 } catch (PDOException $e) {
     error_log('Error en gestión de etapas KvK: ' . $e->getMessage());
-    sendResponse(false, 'Error interno del servidor', null, 500);
+    sendResponse(false, 'Error interno del servidor: ' . $e->getMessage(), null, 500);
 } catch (Exception $e) {
     error_log('Error en gestión de etapas KvK: ' . $e->getMessage());
-    sendResponse(false, 'Error interno del servidor', null, 500);
+    sendResponse(false, 'Error interno del servidor: ' . $e->getMessage(), null, 500);
 }
-?>

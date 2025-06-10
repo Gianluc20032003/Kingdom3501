@@ -1,6 +1,6 @@
 <?php
 // kvk/user-data.php
-// Obtener datos del usuario para KvK (ACTUALIZADO)
+// Obtener datos del usuario para KvK (ACTUALIZADO CON CURRENT_POWER)
 
 require_once '../config/config.php';
 
@@ -13,10 +13,16 @@ $user = getAuthenticatedUser();
 try {
     $pdo = getDBConnection();
 
-    // Obtener datos iniciales de KvK del usuario
+    // Obtener datos iniciales de KvK del usuario (AGREGADO CURRENT_POWER)
     $stmt = $pdo->prepare("
-        SELECT kill_t4_iniciales, kill_t5_iniciales, muertes_propias_iniciales, 
-               foto_inicial_url, foto_muertes_iniciales_url, fecha_registro
+        SELECT 
+            kill_t4_iniciales, 
+            kill_t5_iniciales, 
+            muertes_propias_iniciales, 
+            current_power,
+            foto_inicial_url, 
+            foto_muertes_iniciales_url, 
+            fecha_registro
         FROM kvk_datos 
         WHERE usuario_id = ?
         ORDER BY fecha_registro DESC
@@ -27,7 +33,10 @@ try {
 
     // Obtener datos de honor del usuario
     $stmt = $pdo->prepare("
-        SELECT honor_cantidad, foto_honor_url, fecha_registro
+        SELECT 
+            honor_cantidad, 
+            foto_honor_url, 
+            fecha_registro
         FROM kvk_honor 
         WHERE usuario_id = ?
         LIMIT 1
@@ -37,9 +46,9 @@ try {
 
     // Obtener etapas disponibles
     $stmt = $pdo->query("
-    SELECT id, nombre_etapa, orden_etapa, activa
-    FROM kvk_etapas 
-    ORDER BY orden_etapa ASC
+        SELECT id, nombre_etapa, orden_etapa, activa
+        FROM kvk_etapas 
+        ORDER BY orden_etapa ASC
     ");
     $etapas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
