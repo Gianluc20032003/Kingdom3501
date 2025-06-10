@@ -6,6 +6,7 @@ import { useAlert } from "../../contexts/AlertContext";
 import { validateFile, createFormData } from "../../utils/helpers";
 import { kvkAPI } from "../../services/api";
 import { ButtonSpinner } from "../ui/LoadingSpinner";
+import { getImageUrl } from "../../utils/helpers";
 
 const InitialDataTab = ({
   kvkData,
@@ -151,13 +152,11 @@ const InitialDataTab = ({
                     {t("common.currentImage")}:
                   </p>
                   <img
-                    src={`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`}
+                    src={getImageUrl(kvkData.foto_inicial_url)}
                     alt={t("kvk.initialKillsPhoto")}
                     className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() =>
-                      onImageClick(
-                        `http://localhost:8000/uploads/${kvkData.foto_inicial_url}`
-                      )
+                      onImageClick(getImageUrl(kvkData.foto_inicial_url))
                     }
                   />
                 </div>
@@ -204,12 +203,12 @@ const InitialDataTab = ({
                     {t("common.currentImage")}:
                   </p>
                   <img
-                    src={`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`}
+                    src={getImageUrl(kvkData.foto_muertes_iniciales_url)}
                     alt={t("kvk.ownDeathsPhoto")}
                     className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() =>
                       onImageClick(
-                        `http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`
+                        getImageUrl(kvkData.foto_muertes_iniciales_url)
                       )
                     }
                   />

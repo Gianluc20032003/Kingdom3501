@@ -8,6 +8,7 @@ import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
 import { ButtonSpinner } from "../../components/ui/LoadingSpinner";
 import ImageModal from "../../components/ui/ImageModal";
+import { getImageUrl } from "../../utils/helpers";
 
 const AOOPage = () => {
   const { user } = useAuth();
@@ -281,12 +282,12 @@ const AOOPage = () => {
                               {t("common.currentImage")}:
                             </p>
                             <img
-                              src={`http://localhost:8000/uploads/${userData.foto_comandantes_url}`}
+                              src={getImageUrl(userData.foto_comandantes_url)}
                               alt="Foto actual"
                               className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                               onClick={() =>
                                 openImageModal(
-                                  `http://localhost:8000/uploads/${userData.foto_comandantes_url}`
+                                  getImageUrl(userData.foto_comandantes_url)
                                 )
                               }
                             />

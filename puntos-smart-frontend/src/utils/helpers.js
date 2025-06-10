@@ -1,9 +1,9 @@
 // src/utils/helpers.js - Funciones utilitarias
 
-// Configuración global
+// Configuración global - PARA VITE
 export const CONFIG = {
-  API_BASE_URL: '/api/',
-  UPLOAD_BASE_URL: '/uploads/',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '/api/',
+  UPLOAD_BASE_URL: import.meta.env.VITE_UPLOAD_BASE_URL || '/uploads/',
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
 };
@@ -172,8 +172,8 @@ export const getImageUrl = (imagePath, fallback = '/images/placeholder.png') => 
     return `http://localhost:8000/uploads/${imagePath}`;
   }
   
-  // Para producción
-  return `/uploads/${imagePath}`;
+  // Para producción - CAMBIAR ESTA LÍNEA
+  return `${CONFIG.UPLOAD_BASE_URL}/${imagePath}`;
 };
 
 // Detectar si está en dispositivo móvil

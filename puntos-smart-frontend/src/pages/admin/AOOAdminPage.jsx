@@ -6,6 +6,7 @@ import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
 import { ButtonSpinner } from "../../components/ui/LoadingSpinner";
 import ImageModal from "../../components/ui/ImageModal";
+import { getImageUrl } from "../../utils/helpers";
 
 const AOOAdminPage = () => {
   const { showAlert } = useAlert();
@@ -28,11 +29,12 @@ const AOOAdminPage = () => {
     try {
       setLoading(true);
 
-      const [eventosResponse, statsResponse, inscripcionesResponse] = await Promise.all([
-        adminAPI.getAOOEvents(),
-        adminAPI.getAOOStats(),
-        adminAPI.getAOOInscripciones()
-      ]);
+      const [eventosResponse, statsResponse, inscripcionesResponse] =
+        await Promise.all([
+          adminAPI.getAOOEvents(),
+          adminAPI.getAOOStats(),
+          adminAPI.getAOOInscripciones(),
+        ]);
 
       setEventos(eventosResponse.data.eventos || []);
       setEstadisticas(statsResponse.data.estadisticas);
@@ -400,12 +402,14 @@ const AOOAdminPage = () => {
                         <td className="px-4 py-4 text-center">
                           {inscripcion.foto_comandantes_url ? (
                             <img
-                              src={`http://localhost:8000/uploads/${inscripcion.foto_comandantes_url}`}
+                              src={getImageUrl(
+                                inscripcion.foto_comandantes_url
+                              )}
                               alt="Comandantes"
                               className="w-12 h-12 object-cover rounded mx-auto cursor-pointer hover:opacity-80 transition-opacity"
                               onClick={() =>
                                 openImageModal(
-                                  `http://localhost:8000/uploads/${inscripcion.foto_comandantes_url}`
+                                  getImageUrl(inscripcion.foto_comandantes_url)
                                 )
                               }
                             />
@@ -432,8 +436,8 @@ const AOOAdminPage = () => {
                   No hay inscripciones todavía
                 </h3>
                 <p className="text-gray-500">
-                  Los usuarios podrán inscribirse cuando haya un evento
-                  AOO configurado
+                  Los usuarios podrán inscribirse cuando haya un evento AOO
+                  configurado
                 </p>
               </div>
             )}

@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Configuración base de axios
 const api = axios.create({
-  baseURL: "/api", // Vite proxy redirigirá a tu servidor
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api", 
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -227,9 +227,10 @@ export const uploadWithProgress = (endpoint, formData, onProgress) => {
       reject(new Error("Tiempo de espera agotado"));
     });
 
-    // Configurar y enviar
+    // Configurar y enviar - ACTUALIZADA
     xhr.timeout = 30000;
-    xhr.open("POST", `/api/${endpoint}`);
+    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || "/api";
+    xhr.open("POST", `${apiBaseUrl}/${endpoint}`);
 
     const token = localStorage.getItem("token");
     if (token) {

@@ -1,35 +1,26 @@
-# API .htaccess
-# Configuración para el directorio API
-
-# Habilitar rewrite engine
+# .htaccess en htdocs/
 RewriteEngine On
 
-# Permitir CORS
+# FORZAR QUE APACHE PASE EL HEADER AUTHORIZATION
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+# También probar estas variantes
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+SetEnvIf Authorization "(.*)" REDIRECT_HTTP_AUTHORIZATION=$1
+
+# CORS Headers
 Header always set Access-Control-Allow-Origin "*"
 Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+Header always set Access-Control-Expose-Headers "Authorization"
 
-# Manejar preflight requests
+# Manejar OPTIONS requests
 RewriteCond %{REQUEST_METHOD} OPTIONS
 RewriteRule ^(.*)$ $1 [R=200,L]
 
-# Configuración de seguridad
-# Ocultar información del servidor
-ServerTokens Prod
-ServerSignature Off
-
-# Prevenir acceso a archivos de configuración
-<Files ~ "^\.">
-    Order allow,deny
-    Deny from all
-</Files>
-
-# Configuración de tipos de archivo
-AddType application/json .json
-
-# Configuración de caché para imágenes
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType image/jpeg "access plus 1 month"
-    ExpiresByType image/png "access plus 1 month"
-    ExpiresByType image/gif "access plus 1 month"
+# React Router - todo lo que no sea /api va a index.html
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]

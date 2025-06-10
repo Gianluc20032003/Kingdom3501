@@ -7,6 +7,7 @@ import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
 import { ButtonSpinner } from "../../components/ui/LoadingSpinner";
 import ImageModal from "../../components/ui/ImageModal";
+import { getImageUrl } from "../../utils/helpers";
 
 const MGEPage = () => {
   const { showAlert } = useAlert();
@@ -335,12 +336,12 @@ const MGEPage = () => {
                             {t("common.currentImage")}:
                           </p>
                           <img
-                            src={`http://localhost:8000/uploads/${userData.foto_equipamiento_url}`}
+                            src={getImageUrl(userData.foto_equipamiento_url)}
                             alt={t("mge.equipmentPhoto")}
                             className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
-                                `http://localhost:8000/uploads/${userData.foto_equipamiento_url}`
+                                getImageUrl(userData.foto_equipamiento_url)
                               )
                             }
                           />
@@ -384,12 +385,12 @@ const MGEPage = () => {
                             {t("common.currentImage")}:
                           </p>
                           <img
-                            src={`http://localhost:8000/uploads/${userData.foto_inscripciones_url}`}
+                            src={getImageUrl(userData.foto_inscripciones_url)}
                             alt={t("mge.inscriptionsPhoto")}
                             className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
-                                `http://localhost:8000/uploads/${userData.foto_inscripciones_url}`
+                                getImageUrl(userData.foto_inscripciones_url)
                               )
                             }
                           />
@@ -433,12 +434,12 @@ const MGEPage = () => {
                             {t("common.currentImage")}:
                           </p>
                           <img
-                            src={`http://localhost:8000/uploads/${userData.foto_comandantes_url}`}
+                            src={getImageUrl(userData.foto_comandantes_url)}
                             alt={t("mge.commandersPhoto")}
                             className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
-                                `http://localhost:8000/uploads/${userData.foto_comandantes_url}`
+                                getImageUrl(userData.foto_comandantes_url)
                               )
                             }
                           />
@@ -483,12 +484,12 @@ const MGEPage = () => {
                             {t("common.currentImage")}:
                           </p>
                           <img
-                            src={`http://localhost:8000/uploads/${userData.foto_cabezas_url}`}
+                            src={getImageUrl(userData.foto_cabezas_url)}
                             alt={t("mge.legendaryHeadsPhoto")}
                             className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
-                                `http://localhost:8000/uploads/${userData.foto_cabezas_url}`
+                                getImageUrl(userData.foto_cabezas_url)
                               )
                             }
                           />

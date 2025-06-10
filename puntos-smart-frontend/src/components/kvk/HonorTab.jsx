@@ -6,15 +6,16 @@ import { useAlert } from "../../contexts/AlertContext";
 import { validateFile, createFormData } from "../../utils/helpers";
 import { kvkAPI } from "../../services/api";
 import { ButtonSpinner } from "../ui/LoadingSpinner";
+import { getImageUrl } from "../../utils/helpers";
 
-const HonorTab = ({ 
-  honorData, 
-  honorForm, 
-  setHonorForm, 
-  saving, 
-  setSaving, 
+const HonorTab = ({
+  honorData,
+  honorForm,
+  setHonorForm,
+  saving,
+  setSaving,
   onDataSaved,
-  onImageClick 
+  onImageClick,
 }) => {
   const { t, formatNumber } = useTranslation();
   const { showAlert } = useAlert();
@@ -58,10 +59,10 @@ const HonorTab = ({
       // MAPEAR NOMBRES DEL FRONTEND A LOS QUE ESPERA EL BACKEND
       const submitData = createFormData(
         {
-          honor_cantidad: honorForm.honor_amount,  // Frontend: honor_amount → Backend: honor_cantidad
-          foto_honor: honorForm.honor_photo,       // Frontend: honor_photo → Backend: foto_honor
+          honor_cantidad: honorForm.honor_amount, // Frontend: honor_amount → Backend: honor_cantidad
+          foto_honor: honorForm.honor_photo, // Frontend: honor_photo → Backend: foto_honor
         },
-        ["foto_honor"]  // Cambiar aquí también el nombre
+        ["foto_honor"] // Cambiar aquí también el nombre
       );
 
       const response = await kvkAPI.saveHonor(submitData);
@@ -144,7 +145,11 @@ const HonorTab = ({
                   src="https://servicios.puntossmart.com/img/norho.png"
                   alt={t("kvk.honorPhoto")}
                   className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => onImageClick("https://servicios.puntossmart.com/img/norho.png")}
+                  onClick={() =>
+                    onImageClick(
+                      "https://servicios.puntossmart.com/img/norho.png"
+                    )
+                  }
                 />
               </div>
               {honorData?.foto_honor_url && (
@@ -153,10 +158,12 @@ const HonorTab = ({
                     {t("common.currentImage")}:
                   </p>
                   <img
-                    src={`http://localhost:8000/uploads/${honorData.foto_honor_url}`}
+                    src={getImageUrl(honorData.foto_honor_url)}
                     alt={t("kvk.honorPhoto")}
                     className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => onImageClick(`http://localhost:8000/uploads/${honorData.foto_honor_url}`)}
+                    onClick={() =>
+                      onImageClick(getImageUrl(honorData.foto_honor_url))
+                    }
                   />
                 </div>
               )}

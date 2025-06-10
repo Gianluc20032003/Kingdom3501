@@ -2,13 +2,14 @@
 
 import React from "react";
 import { useTranslation } from "../../contexts/TranslationContext";
+import { getImageUrl } from "../../utils/helpers";
 
-const SummaryTab = ({ 
-  puntuacion, 
-  kvkData, 
-  honorData, 
-  batallas, 
-  onImageClick 
+const SummaryTab = ({
+  puntuacion,
+  kvkData,
+  honorData,
+  batallas,
+  onImageClick,
 }) => {
   const { t, formatNumber, formatDate } = useTranslation();
 
@@ -37,7 +38,9 @@ const SummaryTab = ({
             </div>
 
             <div className="bg-white rounded-lg p-4 shadow-sm">
-              <p className="text-sm text-gray-500">{t("kvk.t4KillsThisStage")}</p>
+              <p className="text-sm text-gray-500">
+                {t("kvk.t4KillsThisStage")}
+              </p>
               <p className="text-xl font-bold text-green-600">
                 +{formatNumber(puntuacion.puntos_kill_t4)}
               </p>
@@ -47,7 +50,9 @@ const SummaryTab = ({
             </div>
 
             <div className="bg-white rounded-lg p-4 shadow-sm">
-              <p className="text-sm text-gray-500">{t("kvk.t5KillsThisStage")}</p>
+              <p className="text-sm text-gray-500">
+                {t("kvk.t5KillsThisStage")}
+              </p>
               <p className="text-xl font-bold text-green-600">
                 +{formatNumber(puntuacion.puntos_kill_t5)}
               </p>
@@ -107,7 +112,9 @@ const SummaryTab = ({
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">{t("kvk.initialOwnDeaths")}</p>
+              <p className="text-sm text-gray-500">
+                {t("kvk.initialOwnDeaths")}
+              </p>
               <p className="text-lg font-bold text-gray-900">
                 {formatNumber(kvkData.muertes_propias_iniciales)}
               </p>
@@ -115,7 +122,9 @@ const SummaryTab = ({
             {/* CAMPO PODER ACTUAL - CORREGIDO */}
             {kvkData.current_power && (
               <div>
-                <p className="text-sm text-gray-500">💪 {t("kvk.currentPower")}</p>
+                <p className="text-sm text-gray-500">
+                  💪 {t("kvk.currentPower")}
+                </p>
                 <p className="text-lg font-bold text-blue-600">
                   {formatNumber(kvkData.current_power)}
                 </p>
@@ -133,10 +142,12 @@ const SummaryTab = ({
                     {t("kvk.initialKillsPhoto")}
                   </p>
                   <img
-                    src={`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`}
+                    src={getImageUrl(kvkData.foto_inicial_url)}
                     alt={t("kvk.initialKillsPhoto")}
                     className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => onImageClick(`http://localhost:8000/uploads/${kvkData.foto_inicial_url}`)}
+                    onClick={() =>
+                      onImageClick(getImageUrl(kvkData.foto_inicial_url))
+                    }
                   />
                 </div>
               )}
@@ -146,10 +157,14 @@ const SummaryTab = ({
                     {t("kvk.ownDeathsPhoto")}
                   </p>
                   <img
-                    src={`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`}
+                    src={getImageUrl(kvkData.foto_muertes_iniciales_url)}
                     alt={t("kvk.ownDeathsPhoto")}
                     className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => onImageClick(`http://localhost:8000/uploads/${kvkData.foto_muertes_iniciales_url}`)}
+                    onClick={() =>
+                      onImageClick(
+                        getImageUrl(kvkData.foto_muertes_iniciales_url)
+                      )
+                    }
                   />
                 </div>
               )}
@@ -175,12 +190,16 @@ const SummaryTab = ({
             </div>
             {honorData.foto_honor_url && (
               <div>
-                <p className="text-sm text-gray-500 mb-1">{t("common.photo")}</p>
+                <p className="text-sm text-gray-500 mb-1">
+                  {t("common.photo")}
+                </p>
                 <img
-                  src={`http://localhost:8000/uploads/${honorData.foto_honor_url}`}
+                  src={getImageUrl(honorData.foto_honor_url)}
                   alt={t("kvk.honorPhoto")}
                   className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => onImageClick(`http://localhost:8000/uploads/${honorData.foto_honor_url}`)}
+                  onClick={() =>
+                    onImageClick(getImageUrl(honorData.foto_honor_url))
+                  }
                 />
               </div>
             )}
@@ -196,10 +215,7 @@ const SummaryTab = ({
         {batallas.length > 0 ? (
           <div className="space-y-4">
             {batallas.map((batalla) => (
-              <div
-                key={batalla.etapa_id}
-                className="bg-gray-50 rounded-lg p-4"
-              >
+              <div key={batalla.etapa_id} className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h5 className="font-semibold text-gray-800">
                     {batalla.nombre_etapa}
@@ -240,7 +256,8 @@ const SummaryTab = ({
                       {formatNumber(batalla.muertes_propias_t4)}
                     </p>
                     <p className="text-xs text-green-600">
-                      +{formatNumber(batalla.muertes_propias_t4 * 5)} {t("common.points")}
+                      +{formatNumber(batalla.muertes_propias_t4 * 5)}{" "}
+                      {t("common.points")}
                     </p>
                   </div>
                   <div>
@@ -251,7 +268,8 @@ const SummaryTab = ({
                       {formatNumber(batalla.muertes_propias_t5)}
                     </p>
                     <p className="text-xs text-green-600">
-                      +{formatNumber(batalla.muertes_propias_t5 * 10)} {t("common.points")}
+                      +{formatNumber(batalla.muertes_propias_t5 * 10)}{" "}
+                      {t("common.points")}
                     </p>
                   </div>
                 </div>
@@ -264,10 +282,12 @@ const SummaryTab = ({
                           {t("kvk.battlePhoto")}
                         </p>
                         <img
-                          src={`http://localhost:8000/uploads/${batalla.foto_batalla_url}`}
+                          src={getImageUrl(batalla.foto_batalla_url)}
                           alt={t("kvk.battlePhoto")}
                           className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => onImageClick(`http://localhost:8000/uploads/${batalla.foto_batalla_url}`)}
+                          onClick={() =>
+                            onImageClick(getImageUrl(batalla.foto_batalla_url))
+                          }
                         />
                       </div>
                     )}
@@ -277,10 +297,12 @@ const SummaryTab = ({
                           {t("kvk.deathsPhoto")}
                         </p>
                         <img
-                          src={`http://localhost:8000/uploads/${batalla.foto_muertes_url}`}
+                          src={getImageUrl(batalla.foto_muertes_url)}
                           alt={t("kvk.deathsPhoto")}
                           className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => onImageClick(`http://localhost:8000/uploads/${batalla.foto_muertes_url}`)}
+                          onClick={() =>
+                            onImageClick(getImageUrl(batalla.foto_muertes_url))
+                          }
                         />
                       </div>
                     )}
@@ -290,7 +312,8 @@ const SummaryTab = ({
                       {t("kvk.battlePointsShort")}
                     </p>
                     <p className="text-lg font-bold text-green-600">
-                      +{formatNumber(
+                      +
+                      {formatNumber(
                         batalla.kill_t4 * 10 +
                           batalla.kill_t5 * 20 +
                           batalla.muertes_propias_t4 * 5 +

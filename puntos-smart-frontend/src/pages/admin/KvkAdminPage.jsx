@@ -7,6 +7,7 @@ import Sidebar from "../../components/common/Sidebar";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import ImageModal from "../../components/ui/ImageModal";
 import { formatNumber, formatDate } from "../../utils/helpers";
+import { getImageUrl } from "../../utils/helpers";
 
 const KvkAdminPage = () => {
   const { user } = useAuth();
@@ -534,12 +535,16 @@ const KvkAdminPage = () => {
                           <div className="flex space-x-4 mt-3">
                             {selectedUser.initial.foto_inicial_url && (
                               <img
-                                src={`http://localhost:8000/uploads/${selectedUser.initial.foto_inicial_url}`}
+                                src={getImageUrl(
+                                  selectedUser.initial.foto_inicial_url
+                                )}
                                 alt="Kills iniciales"
                                 className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() =>
                                   openImageModal(
-                                    `http://localhost:8000/uploads/${selectedUser.initial.foto_inicial_url}`
+                                    getImageUrl(
+                                      selectedUser.initial.foto_inicial_url
+                                    )
                                   )
                                 }
                               />
@@ -547,12 +552,18 @@ const KvkAdminPage = () => {
                             {selectedUser.initial
                               .foto_muertes_iniciales_url && (
                               <img
-                                src={`http://localhost:8000/uploads/${selectedUser.initial.foto_muertes_iniciales_url}`}
+                                src={getImageUrl(
+                                  selectedUser.initial
+                                    .foto_muertes_iniciales_url
+                                )}
                                 alt="Muertes iniciales"
                                 className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() =>
                                   openImageModal(
-                                    `http://localhost:8000/uploads/${selectedUser.initial.foto_muertes_iniciales_url}`
+                                    getImageUrl(
+                                      selectedUser.initial
+                                        .foto_muertes_iniciales_url
+                                    )
                                   )
                                 }
                               />
@@ -584,12 +595,16 @@ const KvkAdminPage = () => {
                               </div>
                               {selectedUser.honor.foto_honor_url && (
                                 <img
-                                  src={`http://localhost:8000/uploads/${selectedUser.honor.foto_honor_url}`}
+                                  src={getImageUrl(
+                                    selectedUser.honor.foto_honor_url
+                                  )}
                                   alt="Honor"
                                   className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                                   onClick={() =>
                                     openImageModal(
-                                      `http://localhost:8000/uploads/${selectedUser.honor.foto_honor_url}`
+                                      getImageUrl(
+                                        selectedUser.honor.foto_honor_url
+                                      )
                                     )
                                   }
                                 />
@@ -671,24 +686,32 @@ const KvkAdminPage = () => {
                                   <div className="flex space-x-2">
                                     {batalla.foto_batalla_url && (
                                       <img
-                                        src={`http://localhost:8000/uploads/${batalla.foto_batalla_url}`}
+                                        src={getImageUrl(
+                                          batalla.foto_batalla_url
+                                        )}
                                         alt="Batalla"
                                         className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80"
                                         onClick={() =>
                                           openImageModal(
-                                            `http://localhost:8000/uploads/${batalla.foto_batalla_url}`
+                                            getImageUrl(
+                                              batalla.foto_batalla_url
+                                            )
                                           )
                                         }
                                       />
                                     )}
                                     {batalla.foto_muertes_url && (
                                       <img
-                                        src={`http://localhost:8000/uploads/${batalla.foto_muertes_url}`}
+                                        src={getImageUrl(
+                                          batalla.foto_muertes_url
+                                        )}
                                         alt="Muertes"
                                         className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80"
                                         onClick={() =>
                                           openImageModal(
-                                            `http://localhost:8000/uploads/${batalla.foto_muertes_url}`
+                                            getImageUrl(
+                                              batalla.foto_muertes_url
+                                            )
                                           )
                                         }
                                       />
