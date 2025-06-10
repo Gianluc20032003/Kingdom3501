@@ -285,7 +285,7 @@ const MovilizacionPage = () => {
                           alt={t("mobilization.pointsPhoto")}
                           className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() =>
-                            openImageModal(`/Uploads/${userData.foto_url}`)
+                            openImageModal(`/uploads/${userData.foto_url}`)
                           }
                         />
                       </div>
@@ -401,11 +401,11 @@ const MovilizacionPage = () => {
                         <td className="px-4 py-4 text-center">
                           {player.foto_url ? (
                             <img
-                              src={`/Uploads/${player.foto_url}`}
+                              src={`/uploads/${player.foto_url}`}
                               alt={t("mobilization.pointsPhoto")}
                               className="w-12 h-12 object-cover rounded mx-auto cursor-pointer hover:opacity-80 transition-opacity"
                               onClick={() =>
-                                openImageModal(`/Uploads/${player.foto_url}`)
+                                openImageModal(`/uploads/${player.foto_url}`)
                               }
                             />
                           ) : (
