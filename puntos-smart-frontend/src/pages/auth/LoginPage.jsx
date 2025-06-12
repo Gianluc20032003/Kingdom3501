@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert } from '../../contexts/AlertContext';
+import { useTranslation } from '../../contexts/TranslationContext';
 import { ButtonSpinner } from '../../components/ui/LoadingSpinner';
 import { validateForm } from '../../utils/helpers';
+import LanguageSelector from '../../components/common/LanguageSelector';
 
 const LoginPage = () => {
   const { login, register } = useAuth();
   const { showAlert } = useAlert();
+  const { t } = useTranslation();
   
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -51,12 +54,12 @@ const LoginPage = () => {
     const rules = {
       username: {
         required: true,
-        label: 'Usuario',
+        label: t("auth.username"),
         minLength: 3
       },
       password: {
         required: true,
-        label: 'Contraseña',
+        label: t("auth.password"),
         minLength: 6
       }
     };
@@ -68,33 +71,33 @@ const LoginPage = () => {
     const rules = {
       user_id: {
         required: true,
-        label: 'ID de Usuario',
+        label: t("auth.rokProfileId"),
         minLength: 3,
-        maxLength: 50,
+        maxLength: 20,
         custom: (value) => {
-          if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
-            return 'El ID solo puede contener letras, números, guiones y guiones bajos';
+          if (!/^[0-9]+$/.test(value)) {
+            return t("validation.rokProfileIdInvalid");
           }
           return null;
         }
       },
       username: {
         required: true,
-        label: 'Nombre de Usuario',
+        label: t("auth.username"),
         minLength: 3,
         maxLength: 100
       },
       password: {
         required: true,
-        label: 'Contraseña',
+        label: t("auth.password"),
         minLength: 6
       },
       passwordConfirm: {
         required: true,
-        label: 'Confirmar Contraseña',
+        label: t("auth.confirmPassword"),
         custom: (value) => {
           if (value !== formData.password) {
-            return 'Las contraseñas no coinciden';
+            return t("validation.passwordMismatch");
           }
           return null;
         }
@@ -121,7 +124,7 @@ const LoginPage = () => {
         const result = await login(formData.username, formData.password, formData.remember);
         
         if (!result.success) {
-          showAlert(result.message || 'Error al iniciar sesión', 'error');
+          showAlert(result.message || t("auth.loginError"), 'error');
         }
         // Si es exitoso, AuthContext se encarga de la redirección
         
@@ -142,7 +145,7 @@ const LoginPage = () => {
         const result = await register(userData);
         
         if (result.success) {
-          showAlert('Registro exitoso. Ahora puedes iniciar sesión.', 'success');
+          showAlert(t("auth.registrationSuccess"), 'success');
           setIsLogin(true);
           setFormData(prev => ({
             ...prev,
@@ -150,11 +153,11 @@ const LoginPage = () => {
             passwordConfirm: ''
           }));
         } else {
-          showAlert(result.message || 'Error al registrarse', 'error');
+          showAlert(result.message || t("auth.registerError"), 'error');
         }
       }
     } catch (error) {
-      showAlert('Error de conexión: ' + error.message, 'error');
+      showAlert(t("auth.connectionError") + ': ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -173,6 +176,11 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-purple-800 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
+        {/* Selector de idioma en la esquina superior derecha */}
+        <div className="flex justify-end mb-4">
+          <LanguageSelector />
+        </div>
+
         {/* Logo */}
         <div className="text-center mb-8 animate-fade-in">
           <div className="bg-white rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-4 shadow-2xl">
@@ -189,7 +197,7 @@ const LoginPage = () => {
         {/* Formulario */}
         <div className="bg-white rounded-2xl p-8 shadow-2xl animate-fade-in">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
+            {isLogin ? t("auth.loginTitle") : t("auth.registerTitle")}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -197,18 +205,27 @@ const LoginPage = () => {
             {!isLogin && (
               <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">
-                  ID de Usuario
+                  {t("auth.rokProfileId")}
                 </label>
                 <input
                   type="text"
                   name="user_id"
                   value={formData.user_id}
                   onChange={handleInputChange}
+                  onInput={(e) => {
+                    // Solo permitir números
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    handleInputChange(e);
+                  }}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
                     errors.user_id ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="Ingresa tu ID único"
+                  placeholder={t("auth.rokProfileIdPlaceholder")}
+                  maxLength="15"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  {t("auth.rokProfileIdDesc")}
+                </p>
                 {errors.user_id && (
                   <p className="text-red-500 text-sm mt-1">{errors.user_id}</p>
                 )}
@@ -218,7 +235,7 @@ const LoginPage = () => {
             {/* Login/Registro: Nombre de Usuario */}
             <div>
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                {isLogin ? 'ID o Nombre de Usuario' : 'Nombre de Usuario'}
+                {isLogin ? t("auth.enterUserIdOrUsername") : t("auth.username")}
               </label>
               <input
                 type="text"
@@ -228,7 +245,7 @@ const LoginPage = () => {
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
                   errors.username ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder={isLogin ? 'Ingresa tu ID o nombre de usuario' : 'Ingresa tu nombre de usuario'}
+                placeholder={isLogin ? t("auth.enterUserIdOrUsername") : t("auth.enterUsername")}
               />
               {errors.username && (
                 <p className="text-red-500 text-sm mt-1">{errors.username}</p>
@@ -238,7 +255,7 @@ const LoginPage = () => {
             {/* Contraseña */}
             <div>
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                Contraseña
+                {t("auth.password")}
               </label>
               <input
                 type="password"
@@ -248,7 +265,7 @@ const LoginPage = () => {
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
                   errors.password ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Ingresa tu contraseña"
+                placeholder={t("auth.enterPassword")}
               />
               {errors.password && (
                 <p className="text-red-500 text-sm mt-1">{errors.password}</p>
@@ -259,7 +276,7 @@ const LoginPage = () => {
             {!isLogin && (
               <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Repetir Contraseña
+                  {t("auth.repeatPassword")}
                 </label>
                 <input
                   type="password"
@@ -269,7 +286,7 @@ const LoginPage = () => {
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors ${
                     errors.passwordConfirm ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="Repite tu contraseña"
+                  placeholder={t("auth.repeatYourPassword")}
                 />
                 {errors.passwordConfirm && (
                   <p className="text-red-500 text-sm mt-1">{errors.passwordConfirm}</p>
@@ -289,7 +306,7 @@ const LoginPage = () => {
                   className="mr-2 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                 />
                 <label htmlFor="remember" className="text-sm text-gray-700">
-                  Recordar en este dispositivo
+                  {t("auth.rememberDevice")}
                 </label>
               </div>
             )}
@@ -305,19 +322,19 @@ const LoginPage = () => {
               } focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed transform hover:scale-105`}
             >
               {loading && <ButtonSpinner />}
-              <span>{isLogin ? 'Iniciar Sesión' : 'Registrarse'}</span>
+              <span>{isLogin ? t("auth.login") : t("auth.register")}</span>
             </button>
           </form>
 
           {/* Switch entre Login/Register */}
           <div className="text-center mt-6">
             <p className="text-gray-600">
-              {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+              {isLogin ? t("auth.noAccount") : t("auth.hasAccount")}
               <button
                 onClick={switchMode}
                 className="ml-2 text-purple-600 hover:text-purple-800 font-semibold transition-colors"
               >
-                {isLogin ? 'Regístrate' : 'Inicia Sesión'}
+                {isLogin ? t("auth.register") : t("auth.login")}
               </button>
             </p>
           </div>

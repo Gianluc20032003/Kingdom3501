@@ -16,6 +16,7 @@ export default {
 
   // Común
   common: {
+    you: "Tú",
     save: "Guardar",
     cancel: "Cancelar",
     edit: "Editar",
@@ -80,6 +81,9 @@ export default {
     loginError: "Error al iniciar sesión",
     registerError: "Error al registrarse",
     connectionError: "Error de conexión",
+    rokProfileId: "ID de Perfil de ROK",
+    rokProfileIdPlaceholder: "Ej: 123456789",
+    rokProfileIdDesc: "Ingresa tu ID numérico de perfil de Rise of Kingdoms",
   },
 
   // Dashboard
@@ -121,8 +125,8 @@ export default {
     currentWeekShort: "Sem. Actual",
     currentPhoto: "Foto Actual",
     difference: "Diferencia",
-    you: "Tú",
     noPhoto: "Sin foto",
+    you: "Tú",
     noRankingData: "No hay datos de ranking",
     noRankingDesc: "Sé el primero en registrar tus cofres de fortaleza",
     dataSaved: "Datos guardados exitosamente",
@@ -307,6 +311,7 @@ export default {
     invalidNumber: "Debe ser un número válido",
     invalidEmail: "Email inválido",
     invalidFile: "Archivo inválido",
+    rokProfileIdInvalid: "El ID de perfil solo puede contener números",
   },
 
   // Mensajes de error

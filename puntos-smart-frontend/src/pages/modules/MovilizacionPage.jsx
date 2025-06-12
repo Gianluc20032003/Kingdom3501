@@ -12,6 +12,7 @@ import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
 import { ButtonSpinner } from "../../components/ui/LoadingSpinner";
 import ImageModal from "../../components/ui/ImageModal";
+import { getImageUrl } from "../../utils/helpers";
 
 const MovilizacionPage = () => {
   const { showAlert } = useAlert();
@@ -281,11 +282,11 @@ const MovilizacionPage = () => {
                           {t("common.currentImage")}:
                         </p>
                         <img
-                          src={`/uploads/${userData.foto_url}`}
+                          src={getImageUrl(userData.foto_url)}
                           alt={t("mobilization.pointsPhoto")}
                           className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() =>
-                            openImageModal(`/uploads/${userData.foto_url}`)
+                            openImageModal(getImageUrl(userData.foto_url))
                           }
                         />
                       </div>
@@ -401,11 +402,11 @@ const MovilizacionPage = () => {
                         <td className="px-4 py-4 text-center">
                           {player.foto_url ? (
                             <img
-                              src={`/uploads/${player.foto_url}`}
+                              src={getImageUrl(player.foto_url)}
                               alt={t("mobilization.pointsPhoto")}
                               className="w-12 h-12 object-cover rounded mx-auto cursor-pointer hover:opacity-80 transition-opacity"
                               onClick={() =>
-                                openImageModal(`/uploads/${player.foto_url}`)
+                                openImageModal(getImageUrl(player.foto_url))
                               }
                             />
                           ) : (

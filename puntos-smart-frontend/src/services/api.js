@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Configuración base de axios
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api", 
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -110,7 +110,7 @@ export const kvkAPI = {
       },
     });
   },
-
+  
   saveHonor: (formData) => {
     return api.post("/kvk/save-honor.php", formData, {
       headers: {
@@ -118,6 +118,9 @@ export const kvkAPI = {
       },
     });
   },
+
+  // NUEVO: Obtener configuraciones de KvK para usuarios normales
+  getSettings: () => api.get("/kvk/settings.php"),
 };
 
 // API de MGE
@@ -171,6 +174,8 @@ export const adminAPI = {
   deleteKvKEtapa: (id) => api.delete("/admin/kvk-etapas.php", { data: { id } }),
   getKvkUserData: () => api.get("/admin/kvk-etapas.php?type=user_data"),
   getKvkRanking: () => api.get("/admin/kvk-etapas.php?type=ranking"),
+  getKvkSettings: () => api.get("/admin/settings.php"),
+  updateKvkSettings: (data) => api.post("/admin/settings.php", data),
   // MGE Admin Endpoints
   setMGEConfig: (tipoTropa) =>
     api.post("/admin/set-mge-config.php", { tipo_tropa: tipoTropa }),

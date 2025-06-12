@@ -169,11 +169,11 @@ export const getImageUrl = (imagePath, fallback = '/images/placeholder.png') => 
   
   // Para desarrollo local
   if (window.location.hostname === 'localhost') {
-    return `http://localhost:8000/uploads/${imagePath}`;
+    return `https://kingdom3501.gianlucvg.com/uploads/${imagePath}`;
   }
   
   // Para producción - CAMBIAR ESTA LÍNEA
-  return `${CONFIG.UPLOAD_BASE_URL}/${imagePath}`;
+  return `https://kingdom3501.gianlucvg.com/uploads/${imagePath}`;
 };
 
 // Detectar si está en dispositivo móvil

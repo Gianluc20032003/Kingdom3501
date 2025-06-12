@@ -80,6 +80,9 @@ export default {
     loginError: "Login error",
     registerError: "Registration error",
     connectionError: "Connection error",
+    rokProfileId: "ROK Profile ID",
+    rokProfileIdPlaceholder: "Ex: 123456789",
+    rokProfileIdDesc: "Enter your numeric Rise of Kingdoms profile ID",
   },
 
   // Dashboard
@@ -304,6 +307,7 @@ export default {
     invalidNumber: "Must be a valid number",
     invalidEmail: "Invalid email",
     invalidFile: "Invalid file",
+    rokProfileIdInvalid: "Profile ID can only contain numbers",
   },
 
   // Error messages

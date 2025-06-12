@@ -12,8 +12,11 @@ $user = getAuthenticatedUser();
 
 // Validar entrada
 $cantidadTropas = $_POST['cantidad_tropas'] ?? null;
-$puedeRally = isset($_POST['puede_liderar_rally']) ? 1 : 0;
-$puedeGuarnicion = isset($_POST['puede_liderar_guarnicion']) ? 1 : 0;
+
+// CORRECCIÓN: Verificar tanto existencia como valor real de los checkboxes
+$puedeRally = (isset($_POST['puede_liderar_rally']) && $_POST['puede_liderar_rally'] === 'true') ? 1 : 0;
+$puedeGuarnicion = (isset($_POST['puede_liderar_guarnicion']) && $_POST['puede_liderar_guarnicion'] === 'true') ? 1 : 0;
+
 $comandantesDisponibles = $_POST['comandantes_disponibles'] ?? '';
 $configId = $_POST['config_id'] ?? null;
 

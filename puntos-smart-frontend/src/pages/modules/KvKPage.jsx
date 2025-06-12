@@ -1,4 +1,4 @@
-// pages/modules/KvKPage.jsx - Archivo principal refactorizado
+// pages/modules/KvKPage.jsx - Con sistema de bloqueo
 
 import React, { useState, useEffect } from "react";
 import Header from "../../components/common/Header";
@@ -11,6 +11,7 @@ import HonorTab from "../../components/kvk/HonorTab";
 import BattlesTab from "../../components/kvk/BattlesTab";
 import SummaryTab from "../../components/kvk/SummaryTab";
 import { useKvKData } from "../../hooks/useKvKData";
+import { useKvKSettings } from "../../hooks/useKvKSettings"; // NUEVO: Hook para configuraciones
 
 const KvKPage = () => {
   const [activeTab, setActiveTab] = useState("initial");
@@ -37,6 +38,9 @@ const KvKPage = () => {
     loadBattleData,
   } = useKvKData();
 
+  // NUEVO: Hook para manejar configuraciones de bloqueo
+  const { settings, loadingSettings } = useKvKSettings();
+
   useEffect(() => {
     loadModuleData();
   }, []);
@@ -46,7 +50,8 @@ const KvKPage = () => {
     setShowModal(true);
   };
 
-  if (loading) {
+  // Mostrar loading si cualquiera de los dos está cargando
+  if (loading || loadingSettings) {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <Sidebar />
@@ -85,6 +90,9 @@ const KvKPage = () => {
                   setSaving={setSaving}
                   onDataSaved={loadModuleData}
                   onImageClick={openImageModal}
+                  // NUEVO: Props para bloqueo de datos iniciales
+                  isLocked={settings.initial_data_bloqueado}
+                  lockMessage={settings.mensaje_initial_data}
                 />
               )}
 
@@ -97,6 +105,9 @@ const KvKPage = () => {
                   setSaving={setSaving}
                   onDataSaved={loadModuleData}
                   onImageClick={openImageModal}
+                  // NUEVO: Props para bloqueo de honor
+                  isLocked={settings.honor_bloqueado}
+                  lockMessage={settings.mensaje_honor}
                 />
               )}
 
@@ -110,6 +121,9 @@ const KvKPage = () => {
                   setSaving={setSaving}
                   onDataSaved={loadModuleData}
                   onImageClick={openImageModal}
+                  // NUEVO: Props para bloqueo de batallas
+                  isLocked={settings.batallas_bloqueado}
+                  lockMessage={settings.mensaje_batallas}
                 />
               )}
 

@@ -10,20 +10,23 @@ $isLocal = (
     strpos($_SERVER['HTTP_HOST'], '.local') !== false
 );
 
-// Configuración de base de datos
+// 🌐 CONFIGURACIÓN DE BASE DE DATOS - SIEMPRE HOSTINGER
+// Tanto local como producción usan la misma BD de Hostinger
+define('DB_HOST', 'localhost');
+define('DB_USER', 'u538210678_magomax');
+define('DB_PASS', 'Altruista10');
+define('DB_NAME', 'u538210678_kingdom');
+
+// Solo cambia la configuración de uploads según el entorno
 if ($isLocal) {
-    // ⚡ Configuración LOCAL
-    define('DB_HOST', 'localhost');
-    define('DB_USER', 'root');
-    define('DB_PASS', '');
-    define('DB_NAME', 'puntos_smart_local');
+    // ⚡ Configuración LOCAL (solo uploads)
     define('UPLOAD_DIR', '../../uploads/'); // Carpeta local uploads
+    
+    // 📊 LOG para desarrollo
+    error_log("🎯 REINO LOCAL - Conectado a BD de Hostinger");
+    error_log("DB: " . DB_HOST . " -> " . DB_NAME);
 } else {
-    // 🌐 Configuración PRODUCCIÓN
-    define('DB_HOST', 'sql113.infinityfree.com');
-    define('DB_USER', 'if0_39019736');
-    define('DB_PASS', 'gDWz59qOvVwgDE');
-    define('DB_NAME', 'if0_39019736_gobernadores_db');
+    // 🌐 Configuración PRODUCCIÓN (solo uploads)
     define('UPLOAD_DIR', '../../uploads/'); // Carpeta producción uploads
 }
 
@@ -46,8 +49,9 @@ if ($isLocal) {
     header('Access-Control-Allow-Origin: http://localhost:3000');
     header('Access-Control-Allow-Credentials: true');
 } else {
-    // CORS para producción
-    header('Access-Control-Allow-Origin: *');
+    // CORS para producción - HOSTINGER
+    header('Access-Control-Allow-Origin: https://kingdom3501.gianlucvg.com');
+    header('Access-Control-Allow-Credentials: true');
 }
 
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -71,36 +75,34 @@ if ($isLocal) {
     ini_set('display_errors', 0);
 }
 
-// 📊 LOG de configuración (solo en desarrollo)
-if ($isLocal) {
-    error_log("🎯 PUNTOS SMART - Configuración LOCAL activada");
-    error_log("DB: " . DB_HOST . " -> " . DB_NAME);
-}
-
 // Función para conectar a la base de datos
 function getDBConnection() {
     try {
+        global $isLocal;
+        $host = $isLocal ? 'srv486.hstgr.io' : 'localhost';
+        
         $pdo = new PDO(
-            "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+            "mysql:host=" . $host . ";dbname=" . DB_NAME . ";charset=utf8mb4",
             DB_USER,
             DB_PASS,
             [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_TIMEOUT => 30 // Timeout más largo para conexiones externas
             ]
         );
         return $pdo;
     } catch (PDOException $e) {
         // Log detallado del error
         error_log("❌ Error DB: " . $e->getMessage());
-        error_log("Host: " . DB_HOST . ", DB: " . DB_NAME . ", User: " . DB_USER);
+        error_log("Host: " . ($isLocal ? 'srv1141.hstgr.io' : 'localhost') . ", DB: " . DB_NAME . ", User: " . DB_USER);
         
         http_response_code(500);
         echo json_encode([
             'success' => false, 
             'message' => 'Error de conexión a la base de datos',
-            'debug' => defined('DB_HOST') ? 'Host: ' . DB_HOST : 'Config no cargada'
+            'debug' => $isLocal ? 'Conectando desde local a Hostinger' : 'Conexión local en Hostinger'
         ]);
         exit();
     }
@@ -165,26 +167,17 @@ function getAuthenticatedUser() {
         $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
     }
     
-    // 🔍 Debug mejorado
-    error_log("🔍 Headers encontrados: " . print_r($headers, true));
-    error_log("🔍 Auth header final: '" . $authHeader . "'");
-    
     if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-        error_log("❌ No se encontró token válido");
         sendResponse(false, 'Token de autorización requerido', null, 401);
     }
     
     $token = $matches[1];
-    error_log("🔍 Token extraído: " . substr($token, 0, 20) . "...");
-    
     $payload = validateJWT($token);
     
     if (!$payload) {
-        error_log("❌ Token inválido");
         sendResponse(false, 'Token inválido o expirado', null, 401);
     }
     
-    error_log("✅ Usuario autenticado: " . $payload->username);
     return $payload;
 }
 
@@ -196,6 +189,7 @@ function requireAdmin() {
     }
     return $user;
 }
+
 
 // Función para comprimir imágenes
 function compressImage($source, $destination, $quality = IMAGE_QUALITY) {
