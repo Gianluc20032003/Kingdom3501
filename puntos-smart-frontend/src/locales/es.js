@@ -12,6 +12,7 @@ export default {
     adminAoo: "Gestión AOO",
     adminMge: "Gestión MGE",
     adminKvk: "Gestión KvK",
+    adminMovilizacion: "Gestión de Movilizacion",
   },
 
   // Común
@@ -160,6 +161,10 @@ export default {
     photoRequired: "La foto es requerida para el registro inicial",
     noRankingData: "No hay datos de ranking",
     noRankingDesc: "Sé el primero en registrar tus puntos de movilización",
+    eventInactive: "Evento Inactivo",
+    eventInactiveTitle: "Evento Temporalmente Deshabilitado",
+    eventInactiveMessage:
+      "El administrador ha desactivado temporalmente el registro de puntos de movilización. Puedes ver el ranking actual, pero no registrar nuevos puntos.",
   },
 
   // KvK

@@ -131,13 +131,13 @@ const InitialDataTab = ({
 
             <div className="mt-3 flex items-start space-x-6">
               <div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                   {t("common.example")}:
                 </p>
                 <img
                   src="https://servicios.puntossmart.com/img/illsexample.jpg"
                   alt={t("kvk.initialKillsPhoto")}
-                  className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                  className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() =>
                     onImageClick(
                       "https://servicios.puntossmart.com/img/illsexample.jpg"
@@ -148,13 +148,13 @@ const InitialDataTab = ({
 
               {kvkData?.foto_inicial_url && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                     {t("common.currentImage")}:
                   </p>
                   <img
                     src={getImageUrl(kvkData.foto_inicial_url)}
                     alt={t("kvk.initialKillsPhoto")}
-                    className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                    className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() =>
                       onImageClick(getImageUrl(kvkData.foto_inicial_url))
                     }
@@ -182,13 +182,13 @@ const InitialDataTab = ({
 
             <div className="mt-3 flex items-start space-x-6">
               <div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                   {t("common.example")}:
                 </p>
                 <img
                   src="https://servicios.puntossmart.com/img/eathexample.jpg"
                   alt={t("kvk.ownDeathsPhoto")}
-                  className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                  className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() =>
                     onImageClick(
                       "https://servicios.puntossmart.com/img/eathexample.jpg"
@@ -199,13 +199,13 @@ const InitialDataTab = ({
 
               {kvkData?.foto_muertes_iniciales_url && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                     {t("common.currentImage")}:
                   </p>
                   <img
                     src={getImageUrl(kvkData.foto_muertes_iniciales_url)}
                     alt={t("kvk.ownDeathsPhoto")}
-                    className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                    className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() =>
                       onImageClick(
                         getImageUrl(kvkData.foto_muertes_iniciales_url)

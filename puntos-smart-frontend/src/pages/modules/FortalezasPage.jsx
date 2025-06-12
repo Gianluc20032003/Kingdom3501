@@ -229,13 +229,13 @@ const FortalezasPage = () => {
                   {/* Preview de imagen actual */}
                   {userData?.current_week?.foto_url && (
                     <div className="mt-3">
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                         {t("common.currentImage")}:
                       </p>
                       <img
                         src={`/uploads/${userData.current_week.foto_url}`}
                         alt="Foto actual"
-                        className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() =>
                           openImageModal(
                             `/uploads/${userData.current_week.foto_url}`

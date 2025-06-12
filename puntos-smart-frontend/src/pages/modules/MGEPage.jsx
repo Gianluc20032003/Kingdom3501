@@ -316,13 +316,13 @@ const MGEPage = () => {
                     />
                     <div className="mt-3 flex items-start space-x-6">
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                           {t("common.example")}:
                         </p>
                         <img
                           src="https://servicios.puntossmart.com/img/equip.jpg"
                           alt={t("kvk.ownDeathsPhoto")}
-                          className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() =>
                             openImageModal(
                               "https://servicios.puntossmart.com/img/equip.jpg"
@@ -338,7 +338,7 @@ const MGEPage = () => {
                           <img
                             src={getImageUrl(userData.foto_equipamiento_url)}
                             alt={t("mge.equipmentPhoto")}
-                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
                                 getImageUrl(userData.foto_equipamiento_url)
@@ -365,13 +365,13 @@ const MGEPage = () => {
                     />
                     <div className="mt-3 flex items-start space-x-6">
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                           {t("common.example")}:
                         </p>
                         <img
                           src="https://servicios.puntossmart.com/img/inscrip.jpg"
                           alt={t("kvk.ownDeathsPhoto")}
-                          className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() =>
                             openImageModal(
                               "https://servicios.puntossmart.com/img/inscrip.jpg"
@@ -387,7 +387,7 @@ const MGEPage = () => {
                           <img
                             src={getImageUrl(userData.foto_inscripciones_url)}
                             alt={t("mge.inscriptionsPhoto")}
-                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
                                 getImageUrl(userData.foto_inscripciones_url)
@@ -414,13 +414,13 @@ const MGEPage = () => {
                     />
                     <div className="mt-3 flex items-start space-x-6">
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                           {t("common.example")}:
                         </p>
                         <img
                           src="https://servicios.puntossmart.com/img/cmr.jpg"
                           alt={t("kvk.ownDeathsPhoto")}
-                          className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() =>
                             openImageModal(
                               "https://servicios.puntossmart.com/img/cmr.jpg"
@@ -436,7 +436,7 @@ const MGEPage = () => {
                           <img
                             src={getImageUrl(userData.foto_comandantes_url)}
                             alt={t("mge.commandersPhoto")}
-                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
                                 getImageUrl(userData.foto_comandantes_url)
@@ -464,13 +464,13 @@ const MGEPage = () => {
 
                     <div className="mt-3 flex items-start space-x-6">
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                           {t("common.example")}:
                         </p>
                         <img
                           src="https://servicios.puntossmart.com/img/head.jpg"
                           alt={t("kvk.ownDeathsPhoto")}
-                          className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() =>
                             openImageModal(
                               "https://servicios.puntossmart.com/img/head.jpg"
@@ -486,7 +486,7 @@ const MGEPage = () => {
                           <img
                             src={getImageUrl(userData.foto_cabezas_url)}
                             alt={t("mge.legendaryHeadsPhoto")}
-                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
                                 getImageUrl(userData.foto_cabezas_url)

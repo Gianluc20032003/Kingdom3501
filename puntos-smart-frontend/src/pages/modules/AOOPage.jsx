@@ -260,13 +260,13 @@ const AOOPage = () => {
                       </p>
                       <div className="mt-3 flex items-start space-x-6">
                         <div>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                             {t("common.example")}:
                           </p>
                           <img
                             src="https://servicios.puntossmart.com/img/cmr.jpg"
                             alt={t("kvk.ownDeathsPhoto")}
-                            className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() =>
                               openImageModal(
                                 "https://servicios.puntossmart.com/img/cmr.jpg"
@@ -278,13 +278,13 @@ const AOOPage = () => {
                         {/* Preview de imagen actual */}
                         {userData?.foto_comandantes_url && (
                           <div className="mt-3">
-                            <p className="text-sm text-gray-600 mb-2">
+                            <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                               {t("common.currentImage")}:
                             </p>
                             <img
                               src={getImageUrl(userData.foto_comandantes_url)}
                               alt="Foto actual"
-                              className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                              className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                               onClick={() =>
                                 openImageModal(
                                   getImageUrl(userData.foto_comandantes_url)

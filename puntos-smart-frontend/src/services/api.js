@@ -78,6 +78,8 @@ export const fortalezasAPI = {
 
 // API de Movilización
 export const movilizacionAPI = {
+  getSettings: () => api.get("/movilizacion/settings.php"),
+
   getUserData: () => api.get("/movilizacion/user-data.php"),
 
   getRanking: () => api.get("/movilizacion/ranking.php"),
@@ -110,7 +112,7 @@ export const kvkAPI = {
       },
     });
   },
-  
+
   saveHonor: (formData) => {
     return api.post("/kvk/save-honor.php", formData, {
       headers: {
@@ -159,13 +161,6 @@ export const aooAPI = {
 
 // API de Admin
 export const adminAPI = {
-  getUsuarios: () => api.get("/admin/usuarios.php"),
-  updateUsuario: (userId, userData) =>
-    api.post("/admin/update-usuario.php", { user_id: userId, ...userData }),
-  deleteUsuario: (userId) =>
-    api.post("/admin/delete-usuario.php", { user_id: userId }),
-  getEstadisticas: () => api.get("/admin/estadisticas.php"),
-
   // KvK Admin Endpoints
   getKvkEtapas: () => api.get("/admin/kvk-etapas.php"),
   createKvKEtapa: (etapaData) => api.post("/admin/kvk-etapas.php", etapaData),
@@ -176,6 +171,19 @@ export const adminAPI = {
   getKvkRanking: () => api.get("/admin/kvk-etapas.php?type=ranking"),
   getKvkSettings: () => api.get("/admin/settings.php"),
   updateKvkSettings: (data) => api.post("/admin/settings.php", data),
+  updateKvkUserInitial: (userId, formData) =>
+    api.post(`/admin/kvk-user-initial.php?user_id=${userId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  updateKvkBattle: (userId, etapaId, formData) =>
+    api.post(
+      `/admin/kvk-battle.php?user_id=${userId}&etapa_id=${etapaId}`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    ),
+
   // MGE Admin Endpoints
   setMGEConfig: (tipoTropa) =>
     api.post("/admin/set-mge-config.php", { tipo_tropa: tipoTropa }),
@@ -193,6 +201,14 @@ export const adminAPI = {
   deleteAOOEvent: (eventId) =>
     api.post("/admin/aoo-config.php", { action: "delete", event_id: eventId }),
   getAOOStats: () => api.get("/admin/aoo-stats.php"),
+
+  // Movilizacion
+  getMovilizacionSettings: () => api.get("/admin/movilizacion/settings.php"),
+  toggleMovilizacion: (activo) =>
+    api.post("/admin/movilizacion/settings.php", { activo }),
+  clearMovilizacionData: () => api.post("/admin/movilizacion/clear-data.php"),
+  getMovilizacionStats: () => api.get("/admin/movilizacion/stats.php"),
+  getMovilizacionRanking: () => api.get("/movilizacion/ranking.php"),
 };
 
 // Función helper para subir archivos con progreso

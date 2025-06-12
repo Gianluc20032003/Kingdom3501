@@ -121,7 +121,6 @@ const KvKPage = () => {
                   setSaving={setSaving}
                   onDataSaved={loadModuleData}
                   onImageClick={openImageModal}
-                  // NUEVO: Props para bloqueo de batallas
                   isLocked={settings.batallas_bloqueado}
                   lockMessage={settings.mensaje_batallas}
                 />

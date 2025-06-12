@@ -1,3 +1,5 @@
+// pages/modules/MovilizacionPage.jsx - CON VERIFICACIÓN DE ESTADO
+
 import React, { useState, useEffect } from "react";
 import { useAlert } from "../../contexts/AlertContext";
 import { useTranslation } from "../../contexts/TranslationContext";
@@ -19,6 +21,7 @@ const MovilizacionPage = () => {
   const { t, formatNumber, formatDate } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEventActive, setIsEventActive] = useState(true); // NUEVO: Estado del evento
   const [userData, setUserData] = useState(null);
   const [rankingData, setRankingData] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -35,10 +38,18 @@ const MovilizacionPage = () => {
   const loadModuleData = async () => {
     try {
       setLoading(true);
-      const [userResponse, rankingResponse] = await Promise.all([
+      
+      // NUEVO: Verificar si el evento está activo
+      const [settingsResponse, userResponse, rankingResponse] = await Promise.all([
+        movilizacionAPI.getSettings(),
         movilizacionAPI.getUserData(),
         movilizacionAPI.getRanking(),
       ]);
+
+      // Verificar estado del evento
+      if (settingsResponse.success && settingsResponse.data) {
+        setIsEventActive(settingsResponse.data.activo);
+      }
 
       setUserData(userResponse.data);
       setRankingData(rankingResponse.data || []);
@@ -78,6 +89,12 @@ const MovilizacionPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // NUEVO: Verificar si el evento está activo antes de enviar
+    if (!isEventActive) {
+      showAlert(t("mobilization.eventInactive"), "error");
+      return;
+    }
 
     if (!formData.puntos || formData.puntos < 0) {
       showAlert(t("mobilization.validPoints"), "error");
@@ -172,6 +189,25 @@ const MovilizacionPage = () => {
               </div>
             </div>
 
+            {/* NUEVO: Mensaje de evento inactivo */}
+            {!isEventActive && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <span className="text-2xl">🚫</span>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-red-800 font-semibold">
+                      {t("mobilization.eventInactiveTitle")}
+                    </h4>
+                    <p className="text-red-700 text-sm mt-1">
+                      {t("mobilization.eventInactiveMessage")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Barra de progreso para el usuario actual */}
             {userData && (
               <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg">
@@ -215,8 +251,20 @@ const MovilizacionPage = () => {
             )}
           </div>
 
-          {/* Formulario */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          {/* Formulario - MODIFICADO: Deshabilitar cuando evento esté inactivo */}
+          <div className={`bg-white rounded-xl shadow-lg p-6 relative ${!isEventActive ? 'opacity-60' : ''}`}>
+            {/* NUEVO: Overlay cuando evento está inactivo */}
+            {!isEventActive && (
+              <div className="absolute inset-0 bg-gray-200 bg-opacity-50 rounded-xl z-10 flex items-center justify-center">
+                <div className="text-center">
+                  <span className="text-6xl text-gray-400">🚫</span>
+                  <p className="text-gray-600 font-semibold mt-2">
+                    {t("mobilization.eventInactive")}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
               ➕{" "}
               {isUpdate
@@ -235,10 +283,13 @@ const MovilizacionPage = () => {
                     name="puntos"
                     value={formData.puntos}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      !isEventActive ? 'bg-gray-100 text-gray-500' : ''
+                    }`}
                     placeholder={t("mobilization.pointsPlaceholder")}
                     min="0"
                     required
+                    disabled={!isEventActive} // NUEVO: Deshabilitar cuando evento esté inactivo
                   />
                   <p className="text-sm text-gray-500 mt-1">
                     {t("mobilization.minGoalDesc")}
@@ -254,21 +305,24 @@ const MovilizacionPage = () => {
                     name="foto_puntos"
                     onChange={handleInputChange}
                     accept="image/*"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      !isEventActive ? 'bg-gray-100 text-gray-500' : ''
+                    }`}
                     required={!isUpdate}
+                    disabled={!isEventActive} // NUEVO: Deshabilitar cuando evento esté inactivo
                   />
                   <p className="text-sm text-gray-500 mt-1">
                     {t("mobilization.pointsPhotoDesc")}
                   </p>
                   <div className="mt-3 flex items-start space-x-6">
                     <div>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                         {t("common.example")}:
                       </p>
                       <img
                         src="https://servicios.puntossmart.com/img/comerciotestPt.jpg"
                         alt={t("kvk.ownDeathsPhoto")}
-                        className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() =>
                           openImageModal(
                             "https://servicios.puntossmart.com/img/comerciotestPt.jpg"
@@ -278,13 +332,13 @@ const MovilizacionPage = () => {
                     </div>
                     {userData?.foto_url && (
                       <div className="mt-3">
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                           {t("common.currentImage")}:
                         </p>
                         <img
                           src={getImageUrl(userData.foto_url)}
                           alt={t("mobilization.pointsPhoto")}
-                          className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() =>
                             openImageModal(getImageUrl(userData.foto_url))
                           }
@@ -299,27 +353,34 @@ const MovilizacionPage = () => {
                 <button
                   type="button"
                   onClick={loadModuleData}
-                  className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className={`px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors ${
+                    !isEventActive ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  disabled={!isEventActive} // NUEVO: Deshabilitar cuando evento esté inactivo
                 >
                   {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                  disabled={saving || !isEventActive} // NUEVO: Deshabilitar cuando evento esté inactivo
+                  className={`px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2 ${
+                    !isEventActive ? 'cursor-not-allowed' : ''
+                  }`}
                 >
                   {saving && <ButtonSpinner />}
                   <span>
-                    {isUpdate
-                      ? t("mobilization.updatePoints")
-                      : t("mobilization.registerPoints")}
+                    {!isEventActive ? '🚫 ' + t("mobilization.eventInactive") : (
+                      isUpdate
+                        ? t("mobilization.updatePoints")
+                        : t("mobilization.registerPoints")
+                    )}
                   </span>
                 </button>
               </div>
             </form>
           </div>
 
-          {/* Ranking */}
+          {/* Ranking - sin cambios */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
               🏆 {t("mobilization.ranking")}

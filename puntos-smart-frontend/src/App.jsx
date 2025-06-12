@@ -15,6 +15,7 @@ import AdminPage from "./pages/modules/AdminPage";
 import AOOAdminPage from "./pages/admin/AOOAdminPage";
 import MGEAdminPage from "./pages/admin/MGEAdminPage";
 import KvkAdminPage from "./pages/admin/KvkAdminPage";
+import MovilizacionAdminPage from "./pages/admin/MovilizacionAdminPage";
 // Componente de loading
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 
@@ -161,6 +162,15 @@ function App() {
             element={
               <ProtectedRoute requireAdmin={true}>
                 <MGEAdminPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin-movilizacion"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <MovilizacionAdminPage />
               </ProtectedRoute>
             }
           />

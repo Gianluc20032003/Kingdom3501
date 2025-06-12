@@ -4,30 +4,26 @@
 
 // 🎯 CONFIGURACIÓN INTELIGENTE - Detecta local vs producción
 $isLocal = (
-    $_SERVER['HTTP_HOST'] === 'localhost:8000' || 
+    $_SERVER['HTTP_HOST'] === 'localhost:8000' ||
     $_SERVER['HTTP_HOST'] === 'localhost' ||
     strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false ||
     strpos($_SERVER['HTTP_HOST'], '.local') !== false
 );
 
-// 🌐 CONFIGURACIÓN DE BASE DE DATOS - SIEMPRE HOSTINGER
-// Tanto local como producción usan la misma BD de Hostinger
-define('DB_HOST', 'localhost');
-define('DB_USER', 'u538210678_magomax');
-define('DB_PASS', 'Altruista10');
-define('DB_NAME', 'u538210678_kingdom');
-
-// Solo cambia la configuración de uploads según el entorno
+// Configuración de base de datos
 if ($isLocal) {
-    // ⚡ Configuración LOCAL (solo uploads)
-    define('UPLOAD_DIR', '../../uploads/'); // Carpeta local uploads
-    
-    // 📊 LOG para desarrollo
-    error_log("🎯 REINO LOCAL - Conectado a BD de Hostinger");
-    error_log("DB: " . DB_HOST . " -> " . DB_NAME);
+    // ⚡ Configuración LOCAL
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+    define('DB_NAME', 'puntos_smart_local');
+    define('UPLOAD_DIR', '../../uploads/');
 } else {
-    // 🌐 Configuración PRODUCCIÓN (solo uploads)
-    define('UPLOAD_DIR', '../../uploads/'); // Carpeta producción uploads
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'u538210678_magomax');
+    define('DB_PASS', 'Altruista10');
+    define('DB_NAME', 'u538210678_kingdom');
+    define('UPLOAD_DIR', '../../uploads/');
 }
 
 // Configuración de archivos
@@ -49,9 +45,8 @@ if ($isLocal) {
     header('Access-Control-Allow-Origin: http://localhost:3000');
     header('Access-Control-Allow-Credentials: true');
 } else {
-    // CORS para producción - HOSTINGER
-    header('Access-Control-Allow-Origin: https://kingdom3501.gianlucvg.com');
-    header('Access-Control-Allow-Credentials: true');
+    // CORS para producción
+    header('Access-Control-Allow-Origin: *');
 }
 
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -75,41 +70,45 @@ if ($isLocal) {
     ini_set('display_errors', 0);
 }
 
+// 📊 LOG de configuración (solo en desarrollo)
+if ($isLocal) {
+    error_log("🎯 PUNTOS SMART - Configuración LOCAL activada");
+    error_log("DB: " . DB_HOST . " -> " . DB_NAME);
+}
+
 // Función para conectar a la base de datos
-function getDBConnection() {
+function getDBConnection()
+{
     try {
-        global $isLocal;
-        $host = $isLocal ? 'srv486.hstgr.io' : 'localhost';
-        
         $pdo = new PDO(
-            "mysql:host=" . $host . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+            "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
             DB_USER,
             DB_PASS,
             [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-                PDO::ATTR_TIMEOUT => 30 // Timeout más largo para conexiones externas
+                PDO::ATTR_EMULATE_PREPARES => false
             ]
         );
         return $pdo;
     } catch (PDOException $e) {
         // Log detallado del error
         error_log("❌ Error DB: " . $e->getMessage());
-        error_log("Host: " . ($isLocal ? 'srv1141.hstgr.io' : 'localhost') . ", DB: " . DB_NAME . ", User: " . DB_USER);
-        
+        error_log("Host: " . DB_HOST . ", DB: " . DB_NAME . ", User: " . DB_USER);
+
         http_response_code(500);
         echo json_encode([
-            'success' => false, 
+            'success' => false,
             'message' => 'Error de conexión a la base de datos',
-            'debug' => $isLocal ? 'Conectando desde local a Hostinger' : 'Conexión local en Hostinger'
+            'debug' => defined('DB_HOST') ? 'Host: ' . DB_HOST : 'Config no cargada'
         ]);
         exit();
     }
 }
 
 // Función para enviar respuesta JSON
-function sendResponse($success = true, $message = '', $data = null, $code = 200) {
+function sendResponse($success = true, $message = '', $data = null, $code = 200)
+{
     http_response_code($code);
     $response = ['success' => $success, 'message' => $message];
     if ($data !== null) {
@@ -120,7 +119,8 @@ function sendResponse($success = true, $message = '', $data = null, $code = 200)
 }
 
 // Función para validar JWT
-function validateJWT($token) {
+function validateJWT($token)
+{
     try {
         require_once 'jwt_helper.php';
         return JWTHelper::decode($token);
@@ -130,10 +130,11 @@ function validateJWT($token) {
 }
 
 // Función para obtener el usuario autenticado
-function getAuthenticatedUser() {
+function getAuthenticatedUser()
+{
     // 🔧 Función mejorada para obtener headers que funciona en todos los servidores
     $headers = [];
-    
+
     // Método 1: getallheaders() si está disponible
     if (function_exists('getallheaders')) {
         $headers = getallheaders();
@@ -146,10 +147,10 @@ function getAuthenticatedUser() {
             }
         }
     }
-    
+
     // 🔧 Buscar authorization header de múltiples formas
     $authHeader = '';
-    
+
     // Método 1: Authorization header estándar
     if (isset($headers['Authorization'])) {
         $authHeader = $headers['Authorization'];
@@ -166,23 +167,33 @@ function getAuthenticatedUser() {
     else if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
         $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
     }
-    
+
+    // 🔍 Debug mejorado
+    error_log("🔍 Headers encontrados: " . print_r($headers, true));
+    error_log("🔍 Auth header final: '" . $authHeader . "'");
+
     if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+        error_log("❌ No se encontró token válido");
         sendResponse(false, 'Token de autorización requerido', null, 401);
     }
-    
+
     $token = $matches[1];
+    error_log("🔍 Token extraído: " . substr($token, 0, 20) . "...");
+
     $payload = validateJWT($token);
-    
+
     if (!$payload) {
+        error_log("❌ Token inválido");
         sendResponse(false, 'Token inválido o expirado', null, 401);
     }
-    
+
+    error_log("✅ Usuario autenticado: " . $payload->username);
     return $payload;
 }
 
 // Función para validar que el usuario sea admin
-function requireAdmin() {
+function requireAdmin()
+{
     $user = getAuthenticatedUser();
     if (!$user->es_admin) {
         sendResponse(false, 'Acceso denegado. Se requieren permisos de administrador.', null, 403);
@@ -190,19 +201,19 @@ function requireAdmin() {
     return $user;
 }
 
-
 // Función para comprimir imágenes
-function compressImage($source, $destination, $quality = IMAGE_QUALITY) {
+function compressImage($source, $destination, $quality = IMAGE_QUALITY)
+{
     $info = getimagesize($source);
-    
+
     if (!$info) {
         return false;
     }
-    
+
     $mime = $info['mime'];
     $width = $info[0];
     $height = $info[1];
-    
+
     // Calcular nuevas dimensiones manteniendo la proporción
     $ratio = min(MAX_IMAGE_WIDTH / $width, MAX_IMAGE_HEIGHT / $height);
     if ($ratio < 1) {
@@ -212,7 +223,7 @@ function compressImage($source, $destination, $quality = IMAGE_QUALITY) {
         $newWidth = $width;
         $newHeight = $height;
     }
-    
+
     // Crear imagen según el tipo
     switch ($mime) {
         case 'image/jpeg':
@@ -227,23 +238,23 @@ function compressImage($source, $destination, $quality = IMAGE_QUALITY) {
         default:
             return false;
     }
-    
+
     if (!$image) {
         return false;
     }
-    
+
     // Crear nueva imagen redimensionada
     $newImage = imagecreatetruecolor($newWidth, $newHeight);
-    
+
     // Preservar transparencia para PNG y GIF
     if ($mime == 'image/png' || $mime == 'image/gif') {
         imagecolortransparent($newImage, imagecolorallocatealpha($newImage, 0, 0, 0, 127));
         imagealphablending($newImage, false);
         imagesavealpha($newImage, true);
     }
-    
+
     imagecopyresampled($newImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-    
+
     // Guardar imagen comprimida
     $result = false;
     switch ($mime) {
@@ -257,44 +268,45 @@ function compressImage($source, $destination, $quality = IMAGE_QUALITY) {
             $result = imagegif($newImage, $destination);
             break;
     }
-    
+
     imagedestroy($image);
     imagedestroy($newImage);
-    
+
     return $result;
 }
 
 // Función para subir archivos
-function uploadFile($file, $subfolder = '') {
+function uploadFile($file, $subfolder = '')
+{
     if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
         throw new Exception('Error al subir el archivo');
     }
-    
+
     // Validar tipo de archivo
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mimeType = finfo_file($finfo, $file['tmp_name']);
     finfo_close($finfo);
-    
+
     if (!in_array($mimeType, ALLOWED_IMAGE_TYPES)) {
         throw new Exception('Tipo de archivo no permitido');
     }
-    
+
     // Validar tamaño
     if ($file['size'] > MAX_FILE_SIZE) {
         throw new Exception('El archivo es demasiado grande');
     }
-    
+
     // Crear directorio si no existe
     $uploadPath = UPLOAD_DIR . $subfolder;
     if (!is_dir($uploadPath)) {
         mkdir($uploadPath, 0755, true);
     }
-    
+
     // Generar nombre único
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = uniqid() . '_' . time() . '.' . $extension;
     $fullPath = $uploadPath . '/' . $filename;
-    
+
     // Comprimir y guardar imagen
     if (compressImage($file['tmp_name'], $fullPath)) {
         return $subfolder . '/' . $filename;
@@ -304,27 +316,30 @@ function uploadFile($file, $subfolder = '') {
 }
 
 // Función para obtener la semana actual del año
-function getCurrentWeek() {
+function getCurrentWeek()
+{
     return date('W');
 }
 
 // Función para obtener el año actual
-function getCurrentYear() {
+function getCurrentYear()
+{
     return date('Y');
 }
 
 // Función para validar entrada
-function validateInput($data, $rules) {
+function validateInput($data, $rules)
+{
     $errors = [];
-    
+
     foreach ($rules as $field => $rule) {
         $value = $data[$field] ?? null;
-        
+
         if (isset($rule['required']) && $rule['required'] && empty($value)) {
             $errors[$field] = "El campo {$field} es requerido";
             continue;
         }
-        
+
         if (!empty($value)) {
             if (isset($rule['type'])) {
                 switch ($rule['type']) {
@@ -345,25 +360,24 @@ function validateInput($data, $rules) {
                         break;
                 }
             }
-            
+
             if (isset($rule['min_length']) && strlen($value) < $rule['min_length']) {
                 $errors[$field] = "El campo {$field} debe tener al menos {$rule['min_length']} caracteres";
             }
-            
+
             if (isset($rule['max_length']) && strlen($value) > $rule['max_length']) {
                 $errors[$field] = "El campo {$field} no puede tener más de {$rule['max_length']} caracteres";
             }
-            
+
             if (isset($rule['min']) && $value < $rule['min']) {
                 $errors[$field] = "El campo {$field} debe ser mayor o igual a {$rule['min']}";
             }
-            
+
             if (isset($rule['max']) && $value > $rule['max']) {
                 $errors[$field] = "El campo {$field} debe ser menor o igual a {$rule['max']}";
             }
         }
     }
-    
+
     return $errors;
 }
-?>

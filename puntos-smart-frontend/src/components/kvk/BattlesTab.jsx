@@ -231,13 +231,13 @@ const BattlesTab = ({
                 {t("kvk.battlePhotoDesc")}
               </p>
               <div className="mt-3">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                   {t("common.example")}:
                 </p>
                 <img
                   src="https://servicios.puntossmart.com/img/illsexample.jpg"
                   alt={t("kvk.battlePhoto")}
-                  className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                  className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => onImageClick("https://servicios.puntossmart.com/img/illsexample.jpg")}
                 />
               </div>
@@ -258,13 +258,13 @@ const BattlesTab = ({
                 {t("kvk.deathsPhotoDesc")}
               </p>
               <div className="mt-3">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                   {t("common.example")}:
                 </p>
                 <img
                   src="https://servicios.puntossmart.com/img/hero.jpg"
                   alt={t("kvk.deathsPhoto")}
-                  className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                  className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => onImageClick("https://servicios.puntossmart.com/img/hero.jpg")}
                 />
               </div>

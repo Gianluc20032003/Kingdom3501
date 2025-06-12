@@ -1,6 +1,6 @@
 <?php
 // movilizacion/save.php
-// Guardar datos de movilización de alianza
+// Guardar datos de movilización de alianza - ACTUALIZADO
 
 require_once '../config/config.php';
 
@@ -9,6 +9,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $user = getAuthenticatedUser();
+
+// NUEVO: Verificar si el evento está activo
+try {
+    $pdo = getDBConnection();
+    
+    $stmt = $pdo->prepare("SELECT activo FROM movilizacion_config ORDER BY fecha_creacion DESC LIMIT 1");
+    $stmt->execute();
+    $config = $stmt->fetch();
+    
+    if ($config && !$config['activo']) {
+        sendResponse(false, 'El evento de movilización está actualmente desactivado', null, 403);
+    }
+    
+} catch (Exception $e) {
+    // Si no hay configuración, permitir el registro (evento activo por defecto)
+}
 
 // Validar entrada
 $puntos = $_POST['puntos'] ?? null;
@@ -20,8 +36,6 @@ if (empty($puntos) || !is_numeric($puntos) || $puntos < 0) {
 $puntos = (int) $puntos;
 
 try {
-    $pdo = getDBConnection();
-    
     // Verificar si ya existe un registro para este usuario
     $stmt = $pdo->prepare("
         SELECT id, foto_url 
@@ -57,7 +71,7 @@ try {
     }
     
     if ($existingRecord) {
-        // Actualizar registro existente
+        // Actualizar registro existente (cumple_minimo se actualiza automáticamente por trigger)
         $stmt = $pdo->prepare("
             UPDATE movilizacion_alianza 
             SET puntos = ?, foto_url = ?
@@ -67,7 +81,7 @@ try {
         
         sendResponse(true, 'Datos actualizados exitosamente');
     } else {
-        // Crear nuevo registro
+        // Crear nuevo registro (cumple_minimo se establece automáticamente por trigger)
         $stmt = $pdo->prepare("
             INSERT INTO movilizacion_alianza (usuario_id, puntos, foto_url)
             VALUES (?, ?, ?)

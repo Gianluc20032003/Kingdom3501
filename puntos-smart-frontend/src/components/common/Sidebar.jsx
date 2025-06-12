@@ -86,12 +86,18 @@ const Sidebar = () => {
     {
       name: t("nav.adminAoo"),
       path: "/admin-aoo",
-      icon: UsersIcon, 
+      icon: UsersIcon,
       enabled: user?.es_admin,
     },
     {
       name: t("nav.adminMge"),
       path: "/admin-mge",
+      icon: FireIcon,
+      enabled: user?.es_admin,
+    },
+    {
+      name: t("nav.adminMovilizacion"),
+      path: "/admin-movilizacion",
       icon: FireIcon,
       enabled: user?.es_admin,
     },

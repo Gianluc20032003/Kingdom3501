@@ -102,12 +102,8 @@ const HonorTab = ({
               <span className="text-2xl">🔒</span>
             </div>
             <div className="ml-3">
-              <h4 className="text-red-800 font-semibold">
-                Registro Bloqueado
-              </h4>
-              <p className="text-red-700 text-sm mt-1">
-                {lockMessage}
-              </p>
+              <h4 className="text-red-800 font-semibold">Registro Bloqueado</h4>
+              <p className="text-red-700 text-sm mt-1">{lockMessage}</p>
             </div>
           </div>
         </div>
@@ -121,7 +117,7 @@ const HonorTab = ({
       </div>
 
       {/* NUEVO: Overlay de bloqueo sobre el formulario */}
-      <div className={`relative ${isLocked ? 'pointer-events-none' : ''}`}>
+      <div className={`relative ${isLocked ? "pointer-events-none" : ""}`}>
         {/* NUEVO: Overlay visual cuando está bloqueado */}
         {isLocked && (
           <div className="absolute inset-0 bg-gray-200 bg-opacity-75 rounded-lg z-10 flex items-center justify-center">
@@ -146,7 +142,7 @@ const HonorTab = ({
                 value={honorForm.honor_amount}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent ${
-                  isLocked ? 'bg-gray-100 text-gray-500' : ''
+                  isLocked ? "bg-gray-100 text-gray-500" : ""
                 }`}
                 placeholder="Ex: 10000"
                 min="0"
@@ -175,7 +171,7 @@ const HonorTab = ({
                 onChange={handleInputChange}
                 accept="image/*"
                 className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent ${
-                  isLocked ? 'bg-gray-100 text-gray-500' : ''
+                  isLocked ? "bg-gray-100 text-gray-500" : ""
                 }`}
                 required={!honorData}
                 disabled={isLocked} // NUEVO: Deshabilitar cuando está bloqueado
@@ -185,13 +181,13 @@ const HonorTab = ({
               </p>
               <div className="mt-3 flex items-start space-x-6">
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                     {t("common.example")}:
                   </p>
                   <img
                     src="https://servicios.puntossmart.com/img/norho.png"
                     alt={t("kvk.honorPhoto")}
-                    className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                    className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() =>
                       onImageClick(
                         "https://servicios.puntossmart.com/img/norho.png"
@@ -201,13 +197,13 @@ const HonorTab = ({
                 </div>
                 {honorData?.foto_honor_url && (
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-base text-white mb-2 font-semibold bg-red-600 rounded-md text-center">
                       {t("common.currentImage")}:
                     </p>
                     <img
                       src={getImageUrl(honorData.foto_honor_url)}
                       alt={t("kvk.honorPhoto")}
-                      className="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                      className="w-40 h-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() =>
                         onImageClick(getImageUrl(honorData.foto_honor_url))
                       }
@@ -223,7 +219,7 @@ const HonorTab = ({
               type="button"
               onClick={() => window.location.reload()}
               className={`px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors ${
-                isLocked ? 'opacity-50 cursor-not-allowed' : ''
+                isLocked ? "opacity-50 cursor-not-allowed" : ""
               }`}
               disabled={isLocked} // NUEVO: Deshabilitar cuando está bloqueado
             >
@@ -233,12 +229,14 @@ const HonorTab = ({
               type="submit"
               disabled={saving || isLocked} // NUEVO: Deshabilitar cuando está bloqueado
               className={`px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center space-x-2 ${
-                isLocked ? 'cursor-not-allowed' : ''
+                isLocked ? "cursor-not-allowed" : ""
               }`}
             >
               {saving && <ButtonSpinner />}
               <span>
-                {isLocked ? '🔒 Bloqueado' : (
+                {isLocked ? (
+                  "🔒 Bloqueado"
+                ) : (
                   <>
                     {honorData ? t("common.update") : t("common.register")}{" "}
                     {t("kvk.honor")}
