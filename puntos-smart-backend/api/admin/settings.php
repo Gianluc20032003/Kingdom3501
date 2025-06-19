@@ -24,6 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->execute();
         $configuraciones = $stmt->fetchAll();
         
+        // DEBUG: Log configuraciones obtenidas
+        error_log("🔍 Configuraciones obtenidas de BD: " . json_encode($configuraciones));
+        
         // Crear array asociativo para fácil acceso
         $config = [];
         foreach ($configuraciones as $conf) {
@@ -48,6 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         
+        // DEBUG: Log datos recibidos
+        error_log("📡 Datos recibidos del frontend: " . json_encode($input));
+        
         if (!isset($input['configuraciones']) || !is_array($input['configuraciones'])) {
             sendResponse(false, 'Formato de datos inválido', null, 400);
         }
@@ -66,9 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         ");
         
         $configuracionesPermitidas = [
+            'prekvk_bloqueado' => 'Bloquear/desbloquear registro de Pre-KvK', // NUEVO
             'honor_bloqueado' => 'Bloquear/desbloquear registro de Honor',
             'batallas_bloqueado' => 'Bloquear/desbloquear registro de Batallas',
             'initial_data_bloqueado' => 'Bloquear/desbloquear registro de Datos Iniciales',
+            'mensaje_prekvk' => 'Mensaje personalizado para Pre-KvK bloqueado', // NUEVO
             'mensaje_honor' => 'Mensaje personalizado para Honor bloqueado',
             'mensaje_batallas' => 'Mensaje personalizado para Batallas bloqueadas',
             'mensaje_initial_data' => 'Mensaje personalizado para Datos Iniciales bloqueados'
@@ -76,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         foreach ($input['configuraciones'] as $nombre => $valor) {
             if (!array_key_exists($nombre, $configuracionesPermitidas)) {
+                error_log("⚠️ Configuración no permitida saltada: $nombre");
                 continue; // Saltar configuraciones no permitidas
             }
             
@@ -86,6 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $valor = $valor ? '1' : '0';
             }
             
+            // DEBUG: Log cada configuración que se va a guardar
+            error_log("💾 Guardando: $nombre = $valor (descripción: $descripcion)");
+            
             $stmt->execute([$nombre, $valor, $descripcion, $user->user_id]);
         }
         
@@ -95,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
     } catch (Exception $e) {
         $pdo->rollBack();
-        error_log('Error actualizando configuraciones KvK: ' . $e->getMessage());
+        error_log('❌ Error actualizando configuraciones KvK: ' . $e->getMessage());
         sendResponse(false, 'Error interno del servidor', null, 500);
     }
     

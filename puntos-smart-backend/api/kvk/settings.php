@@ -1,5 +1,5 @@
 <?php
-// api/kvk/settings.php
+// api/kvk/settings.php - CON PRE-KVK
 // Obtener configuraciones de KvK para usuarios normales (solo lectura)
 
 // Headers CORS
@@ -26,15 +26,17 @@ $user = getAuthenticatedUser();
 try {
     $pdo = getDBConnection();
     
-    // Obtener solo las configuraciones necesarias para usuarios normales
+    // Obtener solo las configuraciones necesarias para usuarios normales (INCLUYENDO PRE-KVK)
     $stmt = $pdo->prepare("
         SELECT nombre_configuracion, valor 
         FROM kvk_configuraciones 
         WHERE activa = 1 
         AND nombre_configuracion IN (
+            'prekvk_bloqueado',
             'honor_bloqueado', 
             'batallas_bloqueado', 
             'initial_data_bloqueado',
+            'mensaje_prekvk',
             'mensaje_honor',
             'mensaje_batallas',
             'mensaje_initial_data'
