@@ -1,4 +1,4 @@
-// components/kvk/SummaryTab.jsx - Tab de resumen y puntuación CORREGIDO
+// components/kvk/SummaryTab.jsx - Tab de resumen y puntuación CON PRE-KVK
 
 import React from "react";
 import { useTranslation } from "../../contexts/TranslationContext";
@@ -8,6 +8,7 @@ const SummaryTab = ({
   puntuacion,
   kvkData,
   honorData,
+  preKvkData, // NUEVO: Solo este parámetro agregado
   batallas,
   onImageClick,
 }) => {
@@ -92,7 +93,40 @@ const SummaryTab = ({
         </div>
       )}
 
-      {/* Datos Iniciales - CORREGIDO CON NOMBRES DE BD */}
+      {/* NUEVA SECCIÓN: Pre-KvK Data - SOLO ESTO ES NUEVO */}
+      {preKvkData && (
+        <div className="bg-blue-50 rounded-lg p-4">
+          <h4 className="font-semibold text-gray-800 mb-3">
+            🎯 Pre-KvK
+          </h4>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold text-blue-600">
+                {formatNumber(preKvkData.puntos_kvk)}
+              </p>
+              <p className="text-sm text-gray-500">Puntos KvK Iniciales</p>
+              <p className="text-xs text-gray-400">
+                {formatDate(preKvkData.fecha_registro)}
+              </p>
+            </div>
+            {preKvkData.foto_puntos_kvk_url && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Foto</p>
+                <img
+                  src={getImageUrl(preKvkData.foto_puntos_kvk_url)}
+                  alt="Pre-KvK"
+                  className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() =>
+                    onImageClick(getImageUrl(preKvkData.foto_puntos_kvk_url))
+                  }
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Datos Iniciales - SIN CAMBIOS */}
       {kvkData && (
         <div className="bg-gray-50 rounded-lg p-4">
           <h4 className="font-semibold text-gray-800 mb-3">
@@ -119,7 +153,6 @@ const SummaryTab = ({
                 {formatNumber(kvkData.muertes_propias_iniciales)}
               </p>
             </div>
-            {/* CAMPO PODER ACTUAL - CORREGIDO */}
             {kvkData.current_power && (
               <div>
                 <p className="text-sm text-gray-500">
@@ -173,7 +206,7 @@ const SummaryTab = ({
         </div>
       )}
 
-      {/* Honor - CORREGIDO CON NOMBRES DE BD */}
+      {/* Honor - SIN CAMBIOS */}
       {honorData && (
         <div className="bg-yellow-50 rounded-lg p-4">
           <h4 className="font-semibold text-gray-800 mb-3">
@@ -207,7 +240,7 @@ const SummaryTab = ({
         </div>
       )}
 
-      {/* Batallas - CORREGIDO CON NOMBRES DE BD */}
+      {/* Batallas - SIN CAMBIOS */}
       <div>
         <h4 className="font-semibold text-gray-800 mb-3">
           ⚔️ {t("kvk.registeredBattles")}

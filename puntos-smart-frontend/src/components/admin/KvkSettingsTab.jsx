@@ -1,4 +1,4 @@
-// components/admin/KvkSettingsTab.jsx
+// components/admin/KvkSettingsTab.jsx - CON PRE-KVK
 import React, { useState, useEffect } from "react";
 import { useAlert } from "../../contexts/AlertContext";
 import { adminAPI } from "../../services/api";
@@ -9,9 +9,11 @@ const KvkSettingsTab = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
+    prekvk_bloqueado: false, // NUEVO
     honor_bloqueado: false,
     batallas_bloqueado: false,
     initial_data_bloqueado: false,
+    mensaje_prekvk: "El registro de Pre-KvK está temporalmente deshabilitado", // NUEVO
     mensaje_honor: "El registro de Honor está temporalmente deshabilitado",
     mensaje_batallas: "El registro de Batallas está temporalmente deshabilitado",
     mensaje_initial_data: "El registro de Datos Iniciales está temporalmente deshabilitado"
@@ -29,9 +31,11 @@ const KvkSettingsTab = () => {
       if (response.success) {
         const config = response.data.configuraciones;
         setSettings({
+          prekvk_bloqueado: config.prekvk_bloqueado?.valor === '1', // NUEVO
           honor_bloqueado: config.honor_bloqueado?.valor === '1',
           batallas_bloqueado: config.batallas_bloqueado?.valor === '1',
           initial_data_bloqueado: config.initial_data_bloqueado?.valor === '1',
+          mensaje_prekvk: config.mensaje_prekvk?.valor || settings.mensaje_prekvk, // NUEVO
           mensaje_honor: config.mensaje_honor?.valor || settings.mensaje_honor,
           mensaje_batallas: config.mensaje_batallas?.valor || settings.mensaje_batallas,
           mensaje_initial_data: config.mensaje_initial_data?.valor || settings.mensaje_initial_data
@@ -104,6 +108,33 @@ const KvkSettingsTab = () => {
         </h3>
         
         <div className="space-y-4">
+          {/* NUEVO: Pre-KvK */}
+          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+            <div>
+              <h4 className="font-semibold text-gray-800">🎯 Módulo de Pre-KvK</h4>
+              <p className="text-sm text-gray-600">
+                Controla si los usuarios pueden registrar puntos iniciales de KvK
+              </p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className={`text-sm font-medium ${settings.prekvk_bloqueado ? 'text-red-600' : 'text-green-600'}`}>
+                {settings.prekvk_bloqueado ? 'Bloqueado' : 'Desbloqueado'}
+              </span>
+              <button
+                onClick={() => handleToggle('prekvk_bloqueado')}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                  settings.prekvk_bloqueado ? 'bg-red-600' : 'bg-green-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    settings.prekvk_bloqueado ? 'translate-x-1' : 'translate-x-6'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* Honor */}
           <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
             <div>
@@ -132,7 +163,7 @@ const KvkSettingsTab = () => {
           </div>
 
           {/* Batallas */}
-          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
             <div>
               <h4 className="font-semibold text-gray-800">⚔️ Módulo de Batallas</h4>
               <p className="text-sm text-gray-600">
@@ -194,6 +225,20 @@ const KvkSettingsTab = () => {
         </h3>
         
         <div className="space-y-4">
+          {/* NUEVO: Mensaje Pre-KvK */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mensaje para Pre-KvK Bloqueado
+            </label>
+            <textarea
+              value={settings.mensaje_prekvk}
+              onChange={(e) => handleMessageChange('mensaje_prekvk', e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              rows="2"
+              placeholder="Mensaje que verán los usuarios cuando Pre-KvK esté bloqueado"
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Mensaje para Honor Bloqueado

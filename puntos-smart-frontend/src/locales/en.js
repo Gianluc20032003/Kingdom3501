@@ -234,6 +234,17 @@ export default {
     validHonor: "Honor must be a valid number greater than or equal to 0",
     honorPhotoRequired: "The honor photo is required for initial registration",
     battlePhotosRequired: "Battle and deaths photos are required",
+    preKvk: "Pre-KvK",
+    preKvkTitle: "Pre-KvK Points",
+    preKvkDescription:
+      "Register your initial points before the official KvK start",
+    preKvkPoints: "KvK Points",
+    preKvkPointsDesc: "Total points you have before the KvK",
+    preKvkPhoto: "KvK Points Photo",
+    preKvkPhotoDesc: "Screenshot showing your KvK points",
+    preKvkPhotoRequired: "The KvK points photo is required",
+    validPreKvkPoints: "KvK points must be valid",
+    preKvkRanking: "Pre-Kvk Ranking",
   },
 
   // MGE

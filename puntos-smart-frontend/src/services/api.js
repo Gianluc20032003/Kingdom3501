@@ -93,7 +93,6 @@ export const movilizacionAPI = {
   },
 };
 
-// API de KvK
 export const kvkAPI = {
   getUserData: () => api.get("/kvk/user-data.php"),
 
@@ -121,8 +120,18 @@ export const kvkAPI = {
     });
   },
 
-  // NUEVO: Obtener configuraciones de KvK para usuarios normales
+  // NUEVO: Métodos para Pre-KvK
+  savePreKvk: (formData) => {
+    return api.post("/kvk/save-prekvk.php", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  getPreKvkData: () => api.get("/kvk/prekvk-data.php"),
   getSettings: () => api.get("/kvk/settings.php"),
+  getPreKvkRanking: () => api.get("/kvk/prekvk-ranking.php"), 
 };
 
 // API de MGE

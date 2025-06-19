@@ -1,5 +1,4 @@
-// hooks/useKvKData.js - Hook personalizado con mapeo de campos
-
+// hooks/useKvKData.js
 import { useState, useEffect } from "react";
 import { useAlert } from "../contexts/AlertContext";
 import { kvkAPI } from "../services/api";
@@ -11,16 +10,17 @@ export const useKvKData = () => {
   const [saving, setSaving] = useState(false);
   const [kvkData, setKvkData] = useState(null);
   const [honorData, setHonorData] = useState(null);
+  const [preKvkData, setPreKvkData] = useState(null);
+  const [rankingData, setRankingData] = useState([]);
   const [puntuacion, setPuntuacion] = useState(null);
   const [etapas, setEtapas] = useState([]);
   const [batallas, setBatallas] = useState([]);
 
-  // Estados para formularios
   const [initialForm, setInitialForm] = useState({
     initial_t4_kills: "",
     initial_t5_kills: "",
     initial_own_deaths: "",
-    current_power: "", // NUEVO CAMPO
+    current_power: "",
     initial_kills_photo: null,
     initial_deaths_photo: null,
   });
@@ -28,6 +28,11 @@ export const useKvKData = () => {
   const [honorForm, setHonorForm] = useState({
     honor_amount: "",
     honor_photo: null,
+  });
+
+  const [preKvkForm, setPreKvkForm] = useState({
+    puntos_kvk: "",
+    foto_puntos_kvk: null,
   });
 
   const [battleForm, setBattleForm] = useState({
@@ -39,7 +44,6 @@ export const useKvKData = () => {
     deaths_photo: null,
   });
 
-  // Obtener la etapa activa
   const etapaActiva = etapas.find(
     (etapa) =>
       parseInt(etapa.activa) === 1 ||
@@ -50,38 +54,40 @@ export const useKvKData = () => {
   const loadModuleData = async () => {
     try {
       setLoading(true);
-      const response = await kvkAPI.getUserData();
 
-      if (response.success) {
-        const data = response.data;
+      const [userDataResponse, preKvkResponse, rankingResponse] = await Promise.all([
+        kvkAPI.getUserData(),
+        kvkAPI.getPreKvkData().catch(() => ({ success: false, data: null })),
+        kvkAPI.getPreKvkRanking().catch(() => ({ success: false, data: [] })),
+      ]);
+
+      if (userDataResponse.success) {
+        const data = userDataResponse.data;
         setKvkData(data.kvk_inicial);
         setHonorData(data.honor_data);
         setPuntuacion(data.puntuacion);
         setEtapas(data.etapas || []);
         setBatallas(data.batallas || []);
 
-        console.log("Etapas cargadas:", data.etapas); // Debug
+        console.log("Etapas cargadas:", data.etapas);
 
-        // Llenar formulario inicial si hay datos - MAPEO DE CAMPOS BD A FRONTEND
         if (data.kvk_inicial) {
           setInitialForm((prev) => ({
             ...prev,
             initial_t4_kills: data.kvk_inicial.kill_t4_iniciales || "",
             initial_t5_kills: data.kvk_inicial.kill_t5_iniciales || "",
             initial_own_deaths: data.kvk_inicial.muertes_propias_iniciales || "",
-            current_power: data.kvk_inicial.current_power || "", // DIRECTO - MISMO NOMBRE
+            current_power: data.kvk_inicial.current_power || "",
           }));
         }
 
-        // Llenar formulario de honor si hay datos - MAPEO DE CAMPOS BD A FRONTEND
         if (data.honor_data) {
           setHonorForm((prev) => ({
             ...prev,
-            honor_amount: data.honor_data.honor_cantidad || "", // BD: honor_cantidad -> Frontend: honor_amount
+            honor_amount: data.honor_data.honor_cantidad || "",
           }));
         }
 
-        // Cargar datos de batalla para la etapa activa si existe
         if (data.etapas && data.etapas.length > 0) {
           const etapaActiva = data.etapas.find(
             (etapa) =>
@@ -89,13 +95,29 @@ export const useKvKData = () => {
               etapa.activa === true ||
               etapa.activa === "1"
           );
-          console.log("Etapa activa encontrada:", etapaActiva); // Debug
+          console.log("Etapa activa encontrada:", etapaActiva);
 
           if (etapaActiva) {
             loadBattleData(etapaActiva.id);
           }
         }
       }
+
+      if (preKvkResponse.success && preKvkResponse.data) {
+        setPreKvkData(preKvkResponse.data);
+        setPreKvkForm((prev) => ({
+          ...prev,
+          puntos_kvk: preKvkResponse.data.puntos_kvk || "",
+        }));
+      }
+
+      if (rankingResponse.success) {
+        setRankingData(rankingResponse.data);
+      } else {
+        console.warn("No se pudieron cargar los datos del ranking");
+        showAlert("No se pudo cargar el ranking de Pre-KvK", "warning");
+      }
+
     } catch (error) {
       console.error("Error loading KvK data:", error);
       showAlert("Error cargando datos: " + error.message, "error");
@@ -107,12 +129,11 @@ export const useKvKData = () => {
   const loadBattleData = (etapaId) => {
     const batalla = batallas.find((b) => b.etapa_id === parseInt(etapaId));
     if (batalla) {
-      // MAPEO DE CAMPOS BD A FRONTEND PARA BATALLAS
       setBattleForm({
         kill_t4: batalla.kill_t4 || "",
         kill_t5: batalla.kill_t5 || "",
-        own_deaths_t4: batalla.muertes_propias_t4 || "", // BD: muertes_propias_t4 -> Frontend: own_deaths_t4
-        own_deaths_t5: batalla.muertes_propias_t5 || "", // BD: muertes_propias_t5 -> Frontend: own_deaths_t5
+        own_deaths_t4: batalla.muertes_propias_t4 || "",
+        own_deaths_t5: batalla.muertes_propias_t5 || "",
         battle_photo: null,
         deaths_photo: null,
       });
@@ -129,26 +150,25 @@ export const useKvKData = () => {
   };
 
   return {
-    // Estados
     loading,
     saving,
     setSaving,
     kvkData,
     honorData,
+    preKvkData,
+    rankingData,
     puntuacion,
     etapas,
     batallas,
     etapaActiva,
-    
-    // Formularios
     initialForm,
     setInitialForm,
     honorForm,
     setHonorForm,
+    preKvkForm,
+    setPreKvkForm,
     battleForm,
     setBattleForm,
-    
-    // Funciones
     loadModuleData,
     loadBattleData,
   };

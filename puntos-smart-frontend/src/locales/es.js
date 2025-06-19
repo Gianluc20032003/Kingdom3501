@@ -237,6 +237,17 @@ export default {
     honorPhotoRequired:
       "La foto de honor es requerida para el registro inicial",
     battlePhotosRequired: "Las fotos de batalla y muertes son requeridas",
+    preKvk: "Pre-KvK",
+    preKvkTitle: "Puntos Pre-KvK",
+    preKvkDescription:
+      "Registra tus puntos iniciales antes del inicio oficial del KvK",
+    preKvkPoints: "Puntos de KvK",
+    preKvkPointsDesc: "Puntos totales que tienes antes del KvK",
+    preKvkPhoto: "Foto de Puntos KvK",
+    preKvkPhotoDesc: "Captura de pantalla mostrando tus puntos de KvK",
+    preKvkPhotoRequired: "La foto de puntos KvK es requerida",
+    validPreKvkPoints: "Los puntos de KvK deben ser válidos",
+    preKvkRanking: "Ranking de Pre-Kvk",
   },
 
   // MGE
